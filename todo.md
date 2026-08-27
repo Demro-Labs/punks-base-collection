@@ -1,4 +1,12 @@
-# Incident — Installation pnpm GitHub Pages
+# Incident — Versions pnpm multiples
+
+- [x] Inspecter `package.json`, le lockfile et tous les workflows qui déclarent pnpm.
+- [x] Choisir une seule source de vérité pour la version pnpm.
+- [x] Corriger le workflow et supprimer les déclarations concurrentes.
+- [x] Valider `pnpm install --frozen-lockfile`, le build et l’artefact Pages.
+- [x] Mettre à jour le pull request et fournir la procédure de synchronisation.
+
+## Incident précédent — Installation pnpm GitHub Pages
 
 - [x] Remplacer l’action pnpm fragile par une installation explicite et reproductible.
 - [x] Fixer Node 22 dans le workflow et vérifier la version pnpm.
