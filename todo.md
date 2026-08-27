@@ -1,4 +1,12 @@
-# Blocage — Dépôt GitHub privé et Pages
+# Modification — Suppression de WalletConnect
+
+- [x] Repérer les références WalletConnect dans le code, le workflow et la documentation.
+- [x] Retirer le bouton et la logique WalletConnect de l’interface.
+- [x] Supprimer la dépendance WalletConnect et sa variable du workflow; le fichier d’exemple protégé n’a pas été modifié automatiquement.
+- [x] Mettre à jour README et pull request.
+- [x] Recompiler et sauvegarder la version sans WalletConnect.
+
+## Blocage précédent — Dépôt GitHub privé et Pages
 
 - [x] Confirmer que le dépôt `Demro-Labs/punks-base-collection` est privé.
 - [x] Confirmer que l’API GitHub Pages renvoie HTTP 403 et que les runs échouent avant le build.

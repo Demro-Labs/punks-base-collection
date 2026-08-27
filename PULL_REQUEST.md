@@ -20,7 +20,7 @@ The collection contract is `0xb9110ba3266f4983193c0d5f55c792a94368af28`. The sit
 
 ## Included functionality
 
-The interface is fully in English. It includes the Collection view, Creator Dashboard, Wallet Dashboard, Base network status, MetaMask connection, WalletConnect QR connection when `VITE_WALLETCONNECT_PROJECT_ID` is supplied, contract copying, collection supply display, metadata loading status, metadata error state, progressive loading of additional token batches, and responsive layouts.
+The interface is fully in English. It includes the Collection view, Creator Dashboard, Wallet Dashboard, Base network status, optional MetaMask connection, contract copying, collection supply display, metadata loading status, metadata error state, progressive loading of additional token batches, and responsive layouts.
 
 Each NFT card now uses on-chain metadata when available and links to the corresponding OpenSea asset URL using the collection contract and token ID. The card also links to the owner-provided Rarible collection. The market section contains direct OpenSea and Rarible buttons instead of attempting to sign or simulate a custom marketplace transaction.
 
@@ -40,7 +40,7 @@ The site never requests a seed phrase or private key. It does not call approval,
 
 ## GitHub Pages setup
 
-The workflow attempts to enable Pages automatically. If repository policy prevents that API operation, enable it once manually under **Settings → Pages → Build and deployment → GitHub Actions**, then rerun the workflow. Add `VITE_WALLETCONNECT_PROJECT_ID` as a repository variable under **Settings → Secrets and variables → Actions → Variables** if WalletConnect QR support is required. Create the Project ID in [Reown Cloud](https://cloud.reown.com/). No private wallet credential belongs in the repository.
+The workflow attempts to enable Pages automatically. If repository policy prevents that API operation, enable it once manually under **Settings → Pages → Build and deployment → GitHub Actions**, then rerun the workflow. MetaMask is the only wallet connection supported by this static site. No private wallet credential belongs in the repository.
 
 ## Follow-up
 

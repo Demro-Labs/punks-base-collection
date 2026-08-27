@@ -22,7 +22,7 @@ The website reads the collection directly from the ERC-721 contract, resolves to
 - Real token images and metadata from IPFS or Arweave URIs.
 - Token detail view with name, description, token ID and attributes.
 - Direct collection and token links to OpenSea and Rarible.
-- Base network wallet connection interface.
+- Optional MetaMask connection on Base Mainnet.
 - English-language collection, wallet and creator dashboard views.
 - Static deployment compatible with GitHub Pages.
 - No private keys, seed phrases or signing credentials are requested by the website.
@@ -58,15 +58,9 @@ pnpm build
 
 The static site is generated in `dist/public`. The build also produces the compatibility server bundle required by the project template.
 
-## WalletConnect configuration
+## Wallet connection
 
-WalletConnect is optional for the collection browsing experience. To enable the QR-code connection flow, create a project at [Reown Cloud](https://cloud.reown.com/) and add the following repository variable in GitHub:
-
-```text
-VITE_WALLETCONNECT_PROJECT_ID=your_reown_project_id
-```
-
-In GitHub, open **Settings → Secrets and variables → Actions → Variables** and create the variable with the exact name above. A Project ID is public configuration; never commit a private key, recovery phrase or wallet secret.
+The site uses MetaMask when a wallet connection is needed. Install the official MetaMask browser extension, switch to Base Mainnet, and connect from the site. The website never requests a seed phrase, private key or recovery phrase.
 
 ## GitHub Pages deployment
 

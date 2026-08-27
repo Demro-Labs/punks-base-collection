@@ -50,8 +50,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build static site
-        env:
-          VITE_WALLETCONNECT_PROJECT_ID: ${{ vars.VITE_WALLETCONNECT_PROJECT_ID }}
         run: pnpm build
 
       - name: Upload Pages artifact
