@@ -1,4 +1,10 @@
-# Incident — Images absentes sur GitHub Pages
+# Modification — Lien GitHub Punks
+
+- [x] Remplacer le lien GitHub générique dans le site.
+- [x] Vérifier le lien direct vers `Demro-Labs/punks-base-collection`.
+- [x] Recompiler et synchroniser la mise à jour vers GitHub Pages.
+
+## Incident précédent — Images absentes sur GitHub Pages
 
 - [x] Ajouter les quatre PNG dans un dossier d’assets versionné du dépôt.
 - [x] Remplacer les chemins `/manus-storage` par des chemins compatibles avec le sous-chemin GitHub Pages.
