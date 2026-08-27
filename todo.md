@@ -1,4 +1,12 @@
-# Incident — GitHub Pages non activé
+# Blocage — Dépôt GitHub privé et Pages
+
+- [x] Confirmer que le dépôt `Demro-Labs/punks-base-collection` est privé.
+- [x] Confirmer que l’API GitHub Pages renvoie HTTP 403 et que les runs échouent avant le build.
+- [ ] Rendre le dépôt public ou vérifier l’éligibilité GitHub Pages du plan du compte.
+- [ ] Activer Pages manuellement avec la source GitHub Actions.
+- [ ] Relancer le workflow et vérifier le déploiement.
+
+## Incident précédent — GitHub Pages non activé
 
 - [ ] Ajouter `pages: write` au job de configuration Pages.
 - [ ] Activer `configure-pages` avec `enablement: true`.
