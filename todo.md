@@ -1,4 +1,12 @@
-# Modification — Suppression de WalletConnect
+# Incident — 404 interne sur GitHub Pages
+
+- [x] Confirmer que GitHub Pages sert bien l’application mais que le routeur reçoit `/punks-base-collection/`.
+- [x] Adapter le routeur pour accepter le sous-chemin GitHub Pages.
+- [x] Vérifier les chemins d’assets et les liens internes.
+- [x] Recompiler et vérifier l’URL Pages.
+- [ ] Synchroniser la correction vers GitHub.
+
+## Modification — Suppression de WalletConnect
 
 - [x] Repérer les références WalletConnect dans le code, le workflow et la documentation.
 - [x] Retirer le bouton et la logique WalletConnect de l’interface.
