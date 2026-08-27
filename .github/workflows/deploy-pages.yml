@@ -19,19 +19,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.4.1
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+
+      - name: Install pnpm
+        run: npm install --global pnpm@10.4.1
+
+      - name: Enable pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
+
+      - name: Verify toolchain
+        run: node --version && pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

@@ -1,4 +1,12 @@
-# Incident — Pull request / GitHub Pages refusé
+# Incident — Installation pnpm GitHub Pages
+
+- [x] Remplacer l’action pnpm fragile par une installation explicite et reproductible.
+- [x] Fixer Node 22 dans le workflow et vérifier la version pnpm.
+- [x] Recompiler et contrôler l’artefact `dist/public`.
+- [x] Mettre à jour la documentation du pull request.
+- [ ] Demander la ligne d’erreur complète si le runner échoue encore.
+
+## Incident précédent — Pull request / GitHub Pages refusé
 
 - [x] Inspecter le workflow GitHub Pages, le package et la configuration Vite.
 - [x] Vérifier si le workflow attend le mauvais dossier de build ou de mauvaises permissions.
