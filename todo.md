@@ -1,4 +1,11 @@
-# Incident — Modifications non appliquées sur GitHub
+# Incident — Images absentes sur GitHub Pages
+
+- [x] Ajouter les quatre PNG dans un dossier d’assets versionné du dépôt.
+- [x] Remplacer les chemins `/manus-storage` par des chemins compatibles avec le sous-chemin GitHub Pages.
+- [x] Vérifier le favicon, le badge et les trois items dans le build.
+- [ ] Synchroniser, relancer Pages et tester les URLs d’images.
+
+## Incident précédent — Modifications non appliquées sur GitHub
 
 - [ ] Comparer le commit du dépôt avec la version locale finale.
 - [ ] Vérifier que les fichiers `Home.tsx`, `index.css`, `index.html` et l’asset `verifier` sont bien dans le dépôt distant.
