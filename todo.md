@@ -1,4 +1,12 @@
-# Extension demandée — Index on-chain et marketplaces externes
+# Extension demandée — Images réelles de la collection
+
+- [x] Supprimer les images générées utilisées comme fallback dans les cartes NFT.
+- [x] Afficher uniquement les images renvoyées par les tokenURI et métadonnées réelles.
+- [x] Ajouter un état neutre de chargement et un état d’erreur sans faux NFT.
+- [x] Vérifier le premier token réel et le rendu des images IPFS/Arweave; les gateways IPFS publiques restent dépendantes de leur disponibilité réseau.
+- [x] Recompiler, capturer le rendu et sauvegarder la version finale.
+
+## Extension précédente — Index on-chain et marketplaces externes
 
 - [x] Vérifier les URL OpenSea et Rarible fournies par le propriétaire.
 - [x] Charger `totalSupply`, `tokenURI`, images, description et attributes depuis le contrat sur Base.

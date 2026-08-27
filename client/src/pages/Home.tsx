@@ -12,12 +12,6 @@ const WALLETCONNECT_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID |
 type View = "collection" | "creator" | "wallet";
 type Action = "buy" | "sell" | "list" | null;
 
-const fallbackPunks = [
-  { id: "001", name: "Punk / 001", trait: "Blue cap · sunglasses", price: "0.18 ETH", image: "/manus-storage/punks-base-card-01_e1afb662.png", tokenId: "1", listed: true },
-  { id: "002", name: "Punk / 002", trait: "Green mohawk · round frames", price: "0.24 ETH", image: "/manus-storage/punks-base-card-02_4c53008a.png", tokenId: "2", listed: true },
-  { id: "003", name: "Punk / 003", trait: "Archive sample · Base native", price: "—", image: "/manus-storage/punks-base-card-01_e1afb662.png", tokenId: "3", listed: false },
-];
-
 const shortAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
 const BASE_RPC = "https://mainnet.base.org";
 const OPENSEA_COLLECTION_URL = "https://opensea.io/collection/punks-base-1";
@@ -50,13 +44,34 @@ function normalizeUri(uri: string) {
   return uri;
 }
 
+function uriCandidates(uri: string) {
+  if (!uri.startsWith("ipfs://")) return [normalizeUri(uri)];
+  const path = uri.slice(7);
+  return [`https://ipfs.io/ipfs/${path}`, `https://dweb.link/ipfs/${path}`, `https://cloudflare-ipfs.com/ipfs/${path}`];
+}
+
+async function fetchMetadataJson(uri: string) {
+  let lastError: unknown;
+  for (const candidate of uriCandidates(uri)) {
+    try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 12000);
+      const response = await fetch(candidate, { signal: controller.signal });
+      window.clearTimeout(timeout);
+      if (!response.ok) throw new Error(`Metadata gateway returned ${response.status}`);
+      return response.json();
+    } catch (error) { lastError = error; }
+  }
+  throw lastError || new Error("Metadata gateway unavailable");
+}
+
 async function fetchNftFromChain(tokenIndex: number): Promise<NftItem | null> {
   try {
     const encodedId = tokenIndex.toString(16).padStart(64, "0");
     const rawUri = await rpc("eth_call", [{ to: CONTRACT, data: `0xc87b56dd${encodedId}` }, "latest"]);
-    const metadataUrl = normalizeUri(decodeAbiString(rawUri));
-    if (!metadataUrl) return null;
-    const metadata = await fetch(metadataUrl).then((res) => res.json());
+    const metadataUri = decodeAbiString(rawUri);
+    if (!metadataUri) return null;
+    const metadata = await fetchMetadataJson(metadataUri);
     const image = normalizeUri(metadata.image || metadata.image_url || "");
     if (!image) return null;
     return { id: String(tokenIndex).padStart(4, "0"), tokenId: String(tokenIndex), name: metadata.name || `Punk / ${tokenIndex}`, trait: metadata.attributes?.slice?.(0, 2).map((item: any) => `${item.trait_type}: ${item.value}`).join(" · ") || "On-chain metadata", price: "—", image, description: metadata.description, attributes: metadata.attributes, listed: false };
@@ -88,7 +103,7 @@ export default function Home() {
         const total = Number.parseInt(rawSupply, 16);
         if (!Number.isFinite(total) || total <= 0) throw new Error("The contract did not return a readable total supply.");
         setSupply(total);
-        const ids = Array.from({ length: Math.min(total, 24) }, (_, index) => index + 1);
+        const ids = Array.from({ length: Math.min(total, 8) }, (_, index) => index + 1);
         const loaded = await Promise.all(ids.map(fetchNftFromChain));
         if (!cancelled) { const valid = loaded.filter(Boolean) as NftItem[]; setNfts(valid); if (!valid.length) setMetadataError("No readable token metadata was returned by the contract."); }
       } catch (error: any) { if (!cancelled) setMetadataError(error?.message || "Unable to load this collection from Base."); }
@@ -101,10 +116,10 @@ export default function Home() {
   async function loadMoreMetadata() {
     if (!supply || nfts.length >= supply) return;
     const start = nfts.length + 1;
-    const end = Math.min(supply, start + 23);
+    const end = Math.min(supply, start + 7);
     const loaded = (await Promise.all(Array.from({ length: end - start + 1 }, (_, offset) => fetchNftFromChain(start + offset)))).filter(Boolean) as NftItem[];
     setNfts((current) => [...current, ...loaded]);
-    setVisibleCount((count) => count + 24);
+    setVisibleCount((count) => count + 8);
   }
 
   useEffect(() => {
@@ -158,10 +173,10 @@ export default function Home() {
 
     <main id="top">
       {view === "collection" && <>
-        <section className="hero-section"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-line" /> ARCHIVE 001 / BASE MAINNET</div><h1>Small format.<br /><em>On-chain</em><br />identity.</h1><p className="hero-lede">Punks Base is a collection of digital characters, recorded on Base and made for people who prefer proof over promises.</p><div className="hero-cta-row"><button className="button button-orange" onClick={() => scrollTo("collection")}>Explore collection <ArrowUpRight size={17} /></button><button className="button button-ghost" onClick={connectWalletConnect}><span className="qr-mark" /> WalletConnect</button></div><div className="hero-note"><ShieldCheck size={15} /> Public contract · Base network · transparent reading</div></div><div className="hero-art-wrap"><div className="art-index">FIG. 001<br /><span>PUNK / BASE</span></div><img className="hero-art" src="/manus-storage/punks-base-hero_109ab9ce.png" alt="Abstract Punk from the Punks Base collection" /><div className="art-caption"><span>01</span><span>ORIGINAL CHARACTER STUDY</span><span>BASE / 8453</span></div></div></section>
+        <section className="hero-section"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-line" /> ARCHIVE 001 / BASE MAINNET</div><h1>Small format.<br /><em>On-chain</em><br />identity.</h1><p className="hero-lede">Punks Base is a collection of digital characters, recorded on Base and made for people who prefer proof over promises.</p><div className="hero-cta-row"><button className="button button-orange" onClick={() => scrollTo("collection")}>Explore collection <ArrowUpRight size={17} /></button><button className="button button-ghost" onClick={connectWalletConnect}><span className="qr-mark" /> WalletConnect</button></div><div className="hero-note"><ShieldCheck size={15} /> Public contract · Base network · transparent reading</div></div><div className="hero-art-wrap"><div className="art-index">FIG. 001<br /><span>PUNK / BASE</span></div>{nfts[0] ? <img className="hero-art real-nft-image" src={nfts[0].image} alt={nfts[0].name} /> : <div className="hero-image-loading">{loadingNfts ? "WAITING FOR REAL TOKEN IMAGE / BASE" : "REAL TOKEN IMAGE UNAVAILABLE"}</div>}<div className="art-caption"><span>01</span><span>ORIGINAL CHARACTER STUDY</span><span>BASE / 8453</span></div></div></section>
         <section className="ticker"><span>COLLECTION / PUNKS BASE</span><span>NETWORK / BASE</span><span>CONTRACT / {contractLabel}</span><span>STANDARD / ERC-721</span><span>COLLECTION / PUNKS BASE</span></section>
         <section id="manifesto" className="manifesto-section"><div className="section-index">[ 00 / NOTE ]</div><div className="manifesto-content"><p className="section-kicker">A PROTOCOL FOR TINY IDENTITIES</p><h2>Every Punk is a <span>signature.</span></h2><p>No inflated roadmap. No magical access promise. Just a readable collection, a verifiable contract and a new place for avatars with nothing to prove.</p><a className="text-link" href={BASESCAN_URL} target="_blank" rel="noreferrer">Read contract on BaseScan <ArrowUpRight size={15} /></a></div><div className="manifesto-stamp"><img src="/manus-storage/punks-base-mark_650b0dd6.png" alt="" /><span>VERIFIED<br />ON BASE</span></div></section>
-        <section id="collection" className="collection-section"><div className="collection-head"><div><p className="section-kicker">THE ARCHIVE / 2026</p><h2>The collection<span>.</span></h2></div><div className="collection-meta"><span><b>{supply ?? "—"}</b> total supply</span><span><b>8453</b> chain id</span></div></div><div className="collection-layout"><aside className="filter-rail"><span className="rail-label">INDEX</span><button className="filter-active">01 / ALL PUNKS</button><button onClick={() => toast.info("Trait filtering is ready for the metadata index.")}>02 / TRAITS</button><button onClick={() => { setView("wallet"); scrollTo("dashboard"); }}>03 / MY WALLET</button><div className="rail-bottom">SORT<br /><button onClick={() => toast.info("Sorting will use the live marketplace index.")}>LATEST <ChevronRight size={14} /></button></div></aside><div className="metadata-state">{loadingNfts ? <><RefreshCw size={15} /> Reading tokenURI metadata from Base…</> : metadataError ? <><ShieldCheck size={15} /> {metadataError} <a href={RARIBLE_COLLECTION_URL} target="_blank" rel="noreferrer">Open marketplace collection <ExternalLink size={13} /></a></> : <><BadgeCheck size={15} /> Live on-chain metadata · {nfts.length} loaded of {supply ?? nfts.length}</>}</div><div className="punk-grid">{(nfts.length ? nfts : fallbackPunks).slice(0, visibleCount).map((punk, index) => <article className={`punk-card card-${index + 1}`} key={punk.id}><div className="punk-image-wrap"><span className="card-number">#{punk.id}</span><img src={punk.image} alt={punk.name} /><span className="scan-line" /></div><div className="punk-info"><div><h3>{punk.name}</h3><p>{punk.trait}</p></div><div className="punk-price"><span>PRICE</span><strong>{punk.price}</strong></div></div><div className="punk-actions"><button className="card-link" onClick={() => setSelectedNft(punk)}>Metadata <ChevronRight size={14} /></button><a className="sell-link" href={`https://opensea.io/assets/base/${CONTRACT}/${punk.tokenId}`} target="_blank" rel="noreferrer">OpenSea <ExternalLink size={14} /></a></div></article>)}</div>{!loadingNfts && nfts.length > 0 && nfts.length < (supply ?? 0) && <button className="load-more" onClick={loadMoreMetadata}>Load next metadata batch <ChevronRight size={14} /></button>}</div></section>
+        <section id="collection" className="collection-section"><div className="collection-head"><div><p className="section-kicker">THE ARCHIVE / 2026</p><h2>The collection<span>.</span></h2></div><div className="collection-meta"><span><b>{supply ?? "—"}</b> total supply</span><span><b>8453</b> chain id</span></div></div><div className="collection-layout"><aside className="filter-rail"><span className="rail-label">INDEX</span><button className="filter-active">01 / ALL PUNKS</button><button onClick={() => toast.info("Trait filtering is ready for the metadata index.")}>02 / TRAITS</button><button onClick={() => { setView("wallet"); scrollTo("dashboard"); }}>03 / MY WALLET</button><div className="rail-bottom">SORT<br /><button onClick={() => toast.info("Sorting will use the live marketplace index.")}>LATEST <ChevronRight size={14} /></button></div></aside><div className="metadata-state">{loadingNfts ? <><RefreshCw size={15} /> Reading real tokenURI metadata from Base…</> : metadataError ? <><ShieldCheck size={15} /> {metadataError} <a href={RARIBLE_COLLECTION_URL} target="_blank" rel="noreferrer">Open marketplace collection <ExternalLink size={13} /></a></> : <><BadgeCheck size={15} /> Live on-chain metadata · {nfts.length} loaded of {supply ?? nfts.length}</>}</div>{loadingNfts && <div className="metadata-skeleton-grid" aria-label="Loading real NFT metadata"><div /><div /><div /></div>}{!loadingNfts && nfts.length > 0 && <div className="punk-grid">{nfts.slice(0, visibleCount).map((punk, index) => <article className={`punk-card card-${index + 1}`} key={punk.id}><div className="punk-image-wrap"><span className="card-number">#{punk.id}</span><img className="real-nft-image" src={punk.image} alt={punk.name} /><span className="scan-line" /></div><div className="punk-info"><div><h3>{punk.name}</h3><p>{punk.trait}</p></div><div className="punk-price"><span>PRICE</span><strong>{punk.price}</strong></div></div><div className="punk-actions"><button className="card-link" onClick={() => setSelectedNft(punk)}>Metadata <ChevronRight size={14} /></button><a className="sell-link" href={`https://opensea.io/assets/base/${CONTRACT}/${punk.tokenId}`} target="_blank" rel="noreferrer">OpenSea <ExternalLink size={14} /></a></div></article>)}</div>}{!loadingNfts && nfts.length > 0 && nfts.length < (supply ?? 0) && <button className="load-more" onClick={loadMoreMetadata}>Load next metadata batch <ChevronRight size={14} /></button>}</div></section>
       </>}
 
       {view !== "collection" && <section id="dashboard" className="dashboard-page"><div className="dashboard-header"><div><p className="section-kicker">{view === "creator" ? "CREATOR CONTROL / 01" : "WALLET CONTROL / 02"}</p><h1>{view === "creator" ? <>Creator<br /><em>dashboard.</em></> : <>Your wallet<br /><em>terminal.</em></>}</h1><p className="dashboard-lede">{view === "creator" ? "A clear control surface for collection status, contract references and future marketplace configuration." : "Your Base account, holdings and marketplace activity in one verifiable view."}</p></div><div className="dashboard-status"><span className="status-box-label">CONNECTION STATUS</span><strong className={wallet ? "is-live" : ""}>{wallet ? "CONNECTED" : "NOT CONNECTED"}</strong><span>{wallet ? shortAddress(wallet) : "Connect a wallet to load live data"}</span><button className="button button-orange button-small" onClick={wallet ? disconnect : connectMetaMask}>{wallet ? "Disconnect" : "Connect wallet"}</button></div></div>

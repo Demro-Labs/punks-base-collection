@@ -6,7 +6,7 @@
 
 ## Summary
 
-This pull request changes the site from a static NFT showcase into a contract-driven collection gallery. The front end reads `totalSupply()` and `tokenURI(uint256)` from the Punks Base ERC-721 contract on Base Mainnet, resolves IPFS and Arweave metadata, and displays each token’s image, name, description-ready data, and trait summary when available.
+This pull request changes the site from a static NFT showcase into a contract-driven collection gallery. The front end reads `totalSupply()` and `tokenURI(uint256)` from the Punks Base ERC-721 contract on Base Mainnet, resolves IPFS and Arweave metadata, and displays each token’s real collection image, name, description-ready data, and trait summary when available. Generated artwork is not used as a collection fallback; while the network is loading, the UI shows a neutral skeleton or a clear unavailable state.
 
 The collection contract is `0xb9110ba3266f4983193c0d5f55c792a94368af28`. The site does not implement an unverified internal marketplace. Buy, sell and listing actions redirect users to the owner-provided OpenSea and Rarible collection pages, where the marketplace handles the wallet confirmation and transaction flow.
 
@@ -26,7 +26,7 @@ Each NFT card now uses on-chain metadata when available and links to the corresp
 
 ## Technical implementation
 
-The browser calls Base Mainnet JSON-RPC at `https://mainnet.base.org`. It reads the ERC-721 function selectors for `totalSupply()` and `tokenURI(uint256)`, decodes the returned ABI string, normalizes `ipfs://` and `ar://` URIs, and fetches the JSON metadata from the resulting gateway URL. The first batch loads 24 tokens; the user can request subsequent batches so the full 10,000-token supply is not requested in one blocking operation. Each loaded token can open a detailed metadata sheet showing its image, token ID, description and complete attributes, with a direct OpenSea token link.
+The browser calls Base Mainnet JSON-RPC at `https://mainnet.base.org`. It reads the ERC-721 function selectors for `totalSupply()` and `tokenURI(uint256)`, decodes the returned ABI string, normalizes `ipfs://` and `ar://` URIs, and fetches the JSON metadata from the resulting gateway URL. The first batch loads 24 tokens; the user can request subsequent batches so the full 10,000-token supply is not requested in one blocking operation. Each loaded token can open a detailed metadata sheet showing its real image, token ID, description and complete attributes, with a direct OpenSea token link.
 
 The site keeps the existing static Vite architecture and remains compatible with free GitHub Pages hosting. `vite.config.ts` uses a relative base path so repository pages can resolve bundled assets under a project subpath. The GitHub Actions workflow publishes `dist/public` through the official Pages artifact/deploy actions.
 
