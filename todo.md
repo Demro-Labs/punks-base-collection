@@ -1,4 +1,12 @@
-# Extension demandée — Images réelles de la collection
+# Incident — Pull request / GitHub Pages refusé
+
+- [x] Inspecter le workflow GitHub Pages, le package et la configuration Vite.
+- [x] Vérifier si le workflow attend le mauvais dossier de build ou de mauvaises permissions.
+- [x] Corriger le workflow et la documentation du pull request.
+- [x] Recompiler et valider le workflow corrigé.
+- [ ] Demander le message d’erreur exact si le refus concerne une règle propre au dépôt.
+
+## Extension demandée — Images réelles de la collection
 
 - [x] Supprimer les images générées utilisées comme fallback dans les cartes NFT.
 - [x] Afficher uniquement les images renvoyées par les tokenURI et métadonnées réelles.
