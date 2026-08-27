@@ -1,4 +1,19 @@
-# Modification — Badge Verified on Base fourni
+# Incident — Modifications non appliquées sur GitHub
+
+- [ ] Comparer le commit du dépôt avec la version locale finale.
+- [ ] Vérifier que les fichiers `Home.tsx`, `index.css`, `index.html` et l’asset `verifier` sont bien dans le dépôt distant.
+- [ ] Synchroniser la dernière version vers GitHub.
+- [ ] Relancer GitHub Pages et contrôler le nouveau commit publié.
+
+## Incident précédent — GitHub Pages non synchronisé
+
+- [ ] Comparer le commit GitHub, le dernier workflow et la version publiée.
+- [ ] Vérifier que les nouveaux assets sont présents dans le dépôt et l’artefact.
+- [ ] Resynchroniser ou relancer le workflow sur `main`.
+- [ ] Vérifier la version publiée avec cache contourné.
+- [ ] Informer l’utilisateur de l’URL et du résultat.
+
+## Modification — Badge Verified on Base fourni
 
 - [x] Copier et héberger l’icône `verifier.png`.
 - [x] Remplacer les coches actuelles par l’icône de vérification bleue.
