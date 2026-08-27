@@ -1,4 +1,20 @@
-# Incident — 404 interne sur GitHub Pages
+# Incident — JSX après intégration des assets
+
+- [ ] Corriger la fermeture JSX incorrecte dans la zone featured items.
+- [ ] Recompiler et vérifier TypeScript.
+- [ ] Capturer le rendu pour confirmer l’icône, les trois items et Verified on Base.
+- [ ] Sauvegarder la version corrigée.
+
+## Modification — Assets Punks/BASE fournis
+
+- [x] Copier les quatre images fournies vers le répertoire d’assets statiques.
+- [x] Héberger les assets avec des URLs persistantes WebDev.
+- [x] Utiliser l’image principale comme favicon, icône de marque et visuel d’identité.
+- [x] Utiliser trois images comme fiches items visibles dans la page.
+- [x] Ajouter le badge Verified on Base avec une coche.
+- [x] Vérifier le rendu desktop/mobile et sauvegarder la version finale.
+
+## Incident précédent — 404 interne sur GitHub Pages
 
 - [x] Confirmer que GitHub Pages sert bien l’application mais que le routeur reçoit `/punks-base-collection/`.
 - [x] Adapter le routeur pour accepter le sous-chemin GitHub Pages.

@@ -214,3 +214,106 @@ footer a { display: flex; align-items: center; gap: 6px; }
 @media (max-width: 460px) { .metadata-skeleton-grid { grid-template-columns: 1fr; } .nav-actions .button-small { padding: 0 9px; } .nav-actions .button-small svg { display: none; } h1 { font-size: 17vw; } .hero-cta-row .button { width: 100%; } .punk-grid { grid-template-columns: 1fr; } .card-2, .card-3 { margin-top: 0; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 @layer base { * { @apply border-border outline-ring/50; } }
+
+/* Asset integration: supplied Punks artwork anchors the identity; verification remains an explicit Base signal. */
+@layer components {
+  .featured-items {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    grid-column: 2;
+    margin: 1.5rem 0 1rem;
+  }
+
+  .featured-item {
+    min-width: 0;
+    background: #f1eee7;
+    color: #17191d;
+    border: 1px solid rgba(23, 25, 29, .18);
+    transition: transform 180ms cubic-bezier(.23, 1, .32, 1), border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .featured-item:hover {
+    transform: translateY(-4px);
+    border-color: #ff6b3d;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+  }
+
+  .featured-image-wrap {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: #d6e1e5;
+  }
+
+  .featured-image-wrap img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+  }
+
+  .featured-check,
+  .verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .62rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .featured-check {
+    position: absolute;
+    left: .65rem;
+    bottom: .65rem;
+    padding: .4rem .5rem;
+    background: #17191d;
+    color: #f1eee7;
+    border-left: 2px solid #ff6b3d;
+  }
+
+  .verified-badge {
+    margin-left: .65rem;
+    color: #b7ef75;
+    white-space: nowrap;
+  }
+
+  .featured-item-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .8rem .9rem .95rem;
+  }
+
+  .featured-item-meta h3 {
+    margin: .3rem 0 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 1rem;
+  }
+
+  .featured-item-meta a,
+  .featured-item-meta > svg {
+    color: #f15b32;
+  }
+
+  @media (max-width: 860px) {
+    .featured-items {
+      grid-column: 1;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .featured-items {
+      grid-template-columns: 1fr;
+    }
+
+    .verified-badge {
+      margin: .5rem 0 0;
+    }
+  }
+}
