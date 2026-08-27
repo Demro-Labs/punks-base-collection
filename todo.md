@@ -1,4 +1,12 @@
-# Incident — Versions pnpm multiples
+# Incident — GitHub Pages non activé
+
+- [ ] Ajouter `pages: write` au job de configuration Pages.
+- [ ] Activer `configure-pages` avec `enablement: true`.
+- [ ] Mettre à jour la documentation de publication.
+- [ ] Synchroniser la correction et relancer l’exécution GitHub Actions.
+- [ ] Vérifier que le déploiement termine avec succès.
+
+## Incident précédent — Versions pnpm multiples
 
 - [x] Inspecter `package.json`, le lockfile et tous les workflows qui déclarent pnpm.
 - [x] Choisir une seule source de vérité pour la version pnpm.

@@ -32,7 +32,7 @@ The site keeps the existing static Vite architecture and remains compatible with
 
 ## Verification
 
-`pnpm check` passes. `pnpm build` passes, and `dist/public/index.html` is present for the Pages artifact. The workflow was corrected to separate build and deploy permissions and to avoid the multiple-version pnpm failure. The toolchain was verified locally with Node 22.13.0, pnpm 10.4.1, `pnpm install --frozen-lockfile`, `pnpm check`, and `pnpm build`. The contract probe confirmed `totalSupply() = 10,000` and confirmed that `tokenURI(1)` returns an IPFS URI. The OpenSea URL was verified as the Punks collection on Base with item, trait, activity and marketplace filters. The Rarible URL was verified as the contract-addressed Base collection destination.
+`pnpm check` passes. `pnpm build` passes, and `dist/public/index.html` is present for the Pages artifact. The workflow was corrected to separate build and deploy permissions, avoid the multiple-version pnpm failure, and automatically enable the repository Pages site with `configure-pages@v5` and `enablement: true`. The build job now also has `pages: write`, which fixes the `Get Pages site failed` / `Resource not accessible by integration` error when Pages has not yet been initialized. The toolchain was verified locally with Node 22.13.0, pnpm 10.4.1, `pnpm install --frozen-lockfile`, `pnpm check`, and `pnpm build`. The contract probe confirmed `totalSupply() = 10,000` and confirmed that `tokenURI(1)` returns an IPFS URI. The OpenSea URL was verified as the Punks collection on Base with item, trait, activity and marketplace filters. The Rarible URL was verified as the contract-addressed Base collection destination.
 
 ## Security and scope note
 
@@ -40,7 +40,7 @@ The site never requests a seed phrase or private key. It does not call approval,
 
 ## GitHub Pages setup
 
-Enable **Settings → Pages → Build and deployment → GitHub Actions**. Add `VITE_WALLETCONNECT_PROJECT_ID` as a repository variable under **Settings → Secrets and variables → Actions → Variables** if WalletConnect QR support is required. Create the Project ID in [Reown Cloud](https://cloud.reown.com/). No private wallet credential belongs in the repository.
+The workflow attempts to enable Pages automatically. If repository policy prevents that API operation, enable it once manually under **Settings → Pages → Build and deployment → GitHub Actions**, then rerun the workflow. Add `VITE_WALLETCONNECT_PROJECT_ID` as a repository variable under **Settings → Secrets and variables → Actions → Variables** if WalletConnect QR support is required. Create the Project ID in [Reown Cloud](https://cloud.reown.com/). No private wallet credential belongs in the repository.
 
 ## Follow-up
 
