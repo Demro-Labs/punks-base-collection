@@ -317,3 +317,19 @@ footer a { display: flex; align-items: center; gap: 6px; }
     }
   }
 }
+
+/* Verification icon: keep the supplied blue check compact inside signal badges. */
+@layer components {
+  .featured-check img,
+  .verified-badge img {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 1rem;
+    object-fit: contain;
+    image-rendering: auto;
+  }
+
+  .verified-badge img {
+    border-radius: 999px;
+  }
+}

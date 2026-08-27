@@ -1,4 +1,11 @@
-# Incident — JSX après intégration des assets
+# Modification — Badge Verified on Base fourni
+
+- [x] Copier et héberger l’icône `verifier.png`.
+- [x] Remplacer les coches actuelles par l’icône de vérification bleue.
+- [x] Vérifier le rendu desktop et mobile.
+- [x] Sauvegarder et synchroniser la version vers GitHub.
+
+## Incident précédent — JSX après intégration des assets
 
 - [ ] Corriger la fermeture JSX incorrecte dans la zone featured items.
 - [ ] Recompiler et vérifier TypeScript.
