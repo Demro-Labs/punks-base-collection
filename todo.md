@@ -1,4 +1,44 @@
-# Modification — Lien GitHub Punks
+# Nouvelle contrainte — Collection Base Mainnet
+
+- [x] Confirmer que la collection `0xb9110ba3266f4983193c0d5f55c792a94368af28` est sur Base Mainnet, Chain ID 8453.
+- [x] Paramétrer le futur marketplace pour cette collection Mainnet.
+- [ ] Garder Base Sepolia uniquement pour les tests avec des NFT de test.
+- [ ] Ne pas déployer le marketplace Mainnet avant audit et confirmation explicite.
+
+## Configuration — Royalties marketplace
+
+- [x] Enregistrer une royalty de 10 %.
+- [x] Enregistrer l’adresse bénéficiaire `0x92524f2a43a4337d6b475d78c3ba9e70f5d3a000`.
+- [x] Confirmer l’architecture : contrat marketplace personnalisé.
+- [x] Confirmer le réseau de test avant tout déploiement : Base Sepolia.
+- [x] Ajouter la configuration non exécutoire au site et à la documentation.
+- [x] Ne pas déployer ni signer de transaction sans confirmation explicite.
+
+## Nouvelle demande — On-chain marketplace Base / MetaMask
+
+- [x] Définir la source de vérité on-chain et les fonctions ERC-721 nécessaires.
+- [x] Vérifier l’architecture d’achat, de vente et de listing sans créer de fausse transaction.
+- [x] Renforcer la lecture Base et la connexion MetaMask côté frontend.
+- [x] Ajouter un draft d’adaptateur marketplace et un ABI minimal; le contrat reste non déployé et non audité.
+- [ ] Ne pas déployer un smart contract réel sans audit, paramètres et confirmation explicite.
+- [x] Tester les flux frontend en mode lecture seule; les tests Solidity nécessitent Foundry/OpenZeppelin dans l’environnement de développement.
+- [x] Documenter les étapes de déploiement et les risques.
+
+## Modification — Descriptions 100 % English
+
+- [x] Définir un texte anglais commun pour GitHub et GitHub Pages.
+- [x] Vérifier la meta description et la langue HTML du site.
+- [x] Mettre à jour la description officielle du repository GitHub.
+- [x] Vérifier les deux affichages et synchroniser la version finale.
+
+## Modification — Description du dépôt GitHub
+
+- [ ] Vérifier le champ Description actuel du repository.
+- [ ] Définir une description anglaise courte et exacte.
+- [ ] Mettre à jour le champ Description du dépôt GitHub.
+- [ ] Vérifier que le nouveau texte est bien enregistré.
+
+## Modification — Lien GitHub Punks
 
 - [x] Remplacer le lien GitHub générique dans le site.
 - [x] Vérifier le lien direct vers `Demro-Labs/punks-base-collection`.

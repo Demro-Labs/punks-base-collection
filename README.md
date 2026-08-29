@@ -106,3 +106,9 @@ PULL_REQUEST.md    Pull request description and release notes
 ## License
 
 This repository is provided for the Punks Base Collection website. Add the project’s preferred license before publishing source code for reuse.
+
+## Custom marketplace preparation
+
+A non-custodial Solidity marketplace draft is included in `contracts/PunksBaseMarketplace.sol`. It is configured for the Punks collection on Base Mainnet, with a 10% royalty configuration and the beneficiary address supplied by the owner. The contract is not deployed: the frontend keeps marketplace addresses empty until Base Sepolia testing, independent security review, source verification and explicit owner approval are complete.
+
+The collection remains on Base Mainnet (`8453`), while Base Sepolia (`84532`) is reserved for tests. The site reads the collection directly from Base and connects to MetaMask, but it does not request a signature or transfer for the undeployed marketplace. See `contracts/README.md` for the security model and testnet workflow.

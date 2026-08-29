@@ -45,3 +45,12 @@ The workflow attempts to enable Pages automatically. If repository policy preven
 ## Follow-up
 
 A future revision can add a richer metadata drawer with every attribute, owner lookup through `ownerOf(tokenId)`, live listing status from a marketplace API, and token-specific Rarible item URLs once the marketplace’s item URL format is confirmed for this collection.
+
+
+## Custom marketplace preparation
+
+This revision also prepares a non-custodial custom marketplace draft in `contracts/PunksBaseMarketplace.sol`. The draft supports fixed-price ERC-721 listings, exact native-token payments, seller cancellation, pause controls, reentrancy protection, two-step ownership, approval checks and a capped royalty configuration.
+
+The configured royalty is 10% (`1000` basis points) for `0x92524f2a43a4337d6b475d78c3ba9e70f5d3a000`. The collection remains on Base Mainnet (`8453`); Base Sepolia (`84532`) is reserved for isolated testing. The marketplace addresses remain intentionally empty in the frontend, so no marketplace signature or transfer can be requested before deployment and audit.
+
+This source is not audited and is not deployed. Before any Mainnet use, the project requires Base Sepolia tests, static analysis, independent security review, source verification and explicit owner confirmation of the final bytecode, fees, royalty policy and beneficiary address. The project does not claim quantum-safe cryptography: MetaMask/EVM signing remains based on the network’s existing cryptographic primitives.
