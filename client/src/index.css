@@ -333,3 +333,29 @@ footer a { display: flex; align-items: center; gap: 6px; }
     border-radius: 999px;
   }
 }
+
+/* Base Terminal / live metadata controls: compact archive action, no layout shift, and reduced-motion friendly feedback. */
+.live-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 107, 52, 0.45);
+  background: transparent;
+  color: var(--signal-orange, #ff6b34);
+  padding: 0.45rem 0.65rem;
+  font: inherit;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  transition: background 160ms ease-out, color 160ms ease-out, transform 160ms ease-out;
+}
+.live-refresh:hover:not(:disabled) {
+  background: var(--signal-orange, #ff6b34);
+  color: #17181b;
+}
+.live-refresh:active:not(:disabled) { transform: scale(0.97); }
+.live-refresh:disabled { opacity: 0.65; cursor: wait; }
+.live-refresh .spin { animation: live-spin 900ms linear infinite; }
+@keyframes live-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .live-refresh .spin { animation: none; }
+}

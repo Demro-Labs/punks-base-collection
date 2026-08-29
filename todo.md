@@ -1,4 +1,12 @@
-# Nouvelle contrainte — Collection Base Mainnet
+# Extension — Live NFT & Metadata
+
+- [x] Vérifier le lecteur `totalSupply()` et `tokenURI()` existant.
+- [x] Afficher en direct image, nom, token ID, description et attributs.
+- [x] Garantir la résolution IPFS/Arweave et les états d’erreur.
+- [x] Vérifier le chargement progressif et la fiche détaillée.
+- [x] Recompiler et synchroniser la version finale.
+
+## Nouvelle contrainte — Collection Base Mainnet
 
 - [x] Confirmer que la collection `0xb9110ba3266f4983193c0d5f55c792a94368af28` est sur Base Mainnet, Chain ID 8453.
 - [x] Paramétrer le futur marketplace pour cette collection Mainnet.
