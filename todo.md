@@ -206,8 +206,16 @@
 
 - [x] Confirmer le 404 sur `/punks-base-collection/gallery` alors que la racine fonctionne.
 - [x] Ajouter un fallback GitHub Pages pour les routes SPA directes.
-- [ ] Vérifier la navigation depuis l’accueil et l’ouverture directe de la galerie.
-- [ ] Synchroniser et publier la correction.
+- [x] Vérifier la navigation depuis l’accueil et l’ouverture directe de la galerie.
+- [x] Synchroniser et publier la correction.
+
+## Metadata gateway correction
+
+- [x] Confirmer que la supply live répond à 10 000.
+- [x] Tester les tokenURI et les métadonnées réelles du token #1.
+- [x] Prioriser la passerelle IPFS Filebase compatible CORS dans l’accueil et la galerie.
+- [x] Conserver IPFS.io et dweb.link comme fallbacks.
+- [x] Valider TypeScript, build, fallback SPA et URLs d’assets.
 
 ## Confirmed follow-up — Gallery access and details
 

@@ -26,7 +26,7 @@ function decodeAbiString(value: string) {
 
 function normalizeUri(uri: string) {
   if (!uri) return "";
-  if (uri.startsWith("ipfs://")) return `https://ipfs.io/ipfs/${uri.slice(7)}`;
+  if (uri.startsWith("ipfs://")) return `https://ipfs.filebase.io/ipfs/${uri.slice(7)}`;
   if (uri.startsWith("ar://")) return `https://arweave.net/${uri.slice(5)}`;
   return uri;
 }
@@ -34,7 +34,7 @@ function normalizeUri(uri: string) {
 function candidates(uri: string) {
   if (!uri.startsWith("ipfs://")) return [normalizeUri(uri)];
   const path = uri.slice(7);
-  return [`https://ipfs.io/ipfs/${path}`, `https://dweb.link/ipfs/${path}`, `https://cloudflare-ipfs.com/ipfs/${path}`];
+  return [`https://ipfs.filebase.io/ipfs/${path}`, `https://ipfs.io/ipfs/${path}`, `https://dweb.link/ipfs/${path}`];
 }
 
 async function metadata(uri: string) {
