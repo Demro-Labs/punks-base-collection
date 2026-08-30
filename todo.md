@@ -202,6 +202,12 @@
 - [x] Tester le rendu responsive, TypeScript et le build de production.
 - [x] Sauvegarder et publier la nouvelle galerie.
 
+## Modification — Home access button
+
+- [x] Ajouter le bouton anglais `View Full Collection` sur la page d’accueil.
+- [x] Relier le bouton à la Live Gallery complète.
+- [x] Vérifier le rendu desktop/mobile, le build et publier la modification.
+
 ## Style reminder — Gallery
 
 La galerie reprend le design « Base Terminal » : interface anglaise, surfaces graphite/ivory, accent orange Base Signal, typographie condensée de terminal, bordures techniques et mise en page éditoriale non centrée.
