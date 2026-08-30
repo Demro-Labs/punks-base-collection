@@ -191,3 +191,17 @@
 - [x] Ne jamais simuler une transaction : afficher clairement les fonctions dépendantes d’un marketplace contract/API vérifié.
 - [x] Ajouter les tests de build et la vérification responsive finale.
 - [x] Mettre à jour `PULL_REQUEST.md` avec les nouvelles fonctionnalités et la configuration.
+
+## Extension — Dedicated Live Gallery
+
+- [x] Définir une route/page Gallery dédiée à la collection complète.
+- [x] Réutiliser les appels live `totalSupply()` et `tokenURI()` de Base Mainnet.
+- [x] Afficher l’image réelle, le token ID, le nom, la description et tous les traits.
+- [x] Ajouter recherche, filtres par traits, tri et état de synchronisation.
+- [x] Ajouter chargement progressif et bouton de chargement complet jusqu’à 10 000 NFT.
+- [x] Tester le rendu responsive, TypeScript et le build de production.
+- [x] Sauvegarder et publier la nouvelle galerie.
+
+## Style reminder — Gallery
+
+La galerie reprend le design « Base Terminal » : interface anglaise, surfaces graphite/ivory, accent orange Base Signal, typographie condensée de terminal, bordures techniques et mise en page éditoriale non centrée.
