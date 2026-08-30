@@ -202,6 +202,13 @@
 - [x] Tester le rendu responsive, TypeScript et le build de production.
 - [x] Sauvegarder et publier la nouvelle galerie.
 
+## Incident — Direct GitHub Pages Gallery URL
+
+- [x] Confirmer le 404 sur `/punks-base-collection/gallery` alors que la racine fonctionne.
+- [x] Ajouter un fallback GitHub Pages pour les routes SPA directes.
+- [ ] Vérifier la navigation depuis l’accueil et l’ouverture directe de la galerie.
+- [ ] Synchroniser et publier la correction.
+
 ## Confirmed follow-up — Gallery access and details
 
 - [x] Ajouter un second `View Full Collection` dans la section `The collection`.
