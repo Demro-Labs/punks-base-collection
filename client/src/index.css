@@ -365,6 +365,9 @@ footer a { display: flex; align-items: center; gap: 6px; }
 .gallery-nav { display: flex; gap: 25px; margin-left: auto; font: 10px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .1em; color: #a9aaa4; }
 .gallery-nav a { display: inline-flex; align-items: center; gap: 6px; }
 .gallery-nav a:hover { color: #ff6b35; }
+.gallery-back { color: #ff6b35; }
+.collection-gallery-link { display: inline-flex; align-items: center; gap: 7px; margin-top: 20px; color: #c95028; border-bottom: 1px solid #c95028; padding-bottom: 6px; font: 10px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .07em; }
+.collection-gallery-link:hover { color: #17191d; border-color: #17191d; }
 .gallery-intro { display: grid; grid-template-columns: .22fr 1fr .34fr; gap: 28px; padding: 8vw 8vw 7vw; border-bottom: 1px solid #3d3f42; }
 .gallery-intro h1 { margin-top: 18px; font-size: clamp(54px, 8vw, 112px); }
 .gallery-lede { max-width: 540px; margin-top: 28px; color: #a8aaa5; line-height: 1.7; font-size: 15px; }
@@ -389,6 +392,7 @@ footer a { display: flex; align-items: center; gap: 6px; }
 .gallery-card:nth-child(4n + 3) { margin-top: 52px; }
 .gallery-card:hover { transform: translateY(-5px); box-shadow: 9px 9px 0 #ff6b35; }
 .gallery-image { display: block; position: relative; overflow: hidden; aspect-ratio: 1; background: #17191d; }
+.gallery-image-button { width: 100%; padding: 0; border: 0; cursor: pointer; text-align: left; }
 .gallery-image img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .3s cubic-bezier(.23,1,.32,1); }
 .gallery-card:hover .gallery-image img { transform: scale(1.035); }
 .gallery-image span { position: absolute; left: 10px; top: 10px; color: #eee9dc; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .1em; text-shadow: 0 1px 5px #17191d; }
@@ -403,5 +407,19 @@ footer a { display: flex; align-items: center; gap: 6px; }
 .gallery-empty b { display: block; font-size: 18px; }
 .gallery-empty span { display: block; margin-top: 10px; color: #6d6c66; font: 11px 'IBM Plex Mono', monospace; }
 .gallery-load-more { display: block; margin: 38px auto 0; }
+.gallery-detail-overlay { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(12, 13, 15, .82); }
+.gallery-detail-modal { position: relative; width: min(930px, 100%); max-height: min(760px, 92vh); overflow: auto; padding: 22px; border: 1px solid #55585a; background: #202226; color: #eee9dc; box-shadow: 12px 12px 0 #ff6b35; }
+.gallery-detail-close { position: absolute; z-index: 2; top: 13px; right: 13px; color: #eee9dc; }
+.gallery-detail-grid { display: grid; grid-template-columns: minmax(280px, .9fr) 1fr; gap: 30px; }
+.gallery-detail-image { aspect-ratio: 1; background: #17191d; }
+.gallery-detail-image img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.gallery-detail-copy { padding: 34px 15px 15px 0; }
+.gallery-detail-copy h2 { margin-top: 12px; color: #eee9dc; font-size: clamp(32px, 4vw, 58px); line-height: .98; letter-spacing: -.05em; }
+.gallery-detail-copy > p:not(.section-kicker) { margin-top: 20px; color: #a8aaa5; font-size: 14px; line-height: 1.65; }
+.gallery-detail-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 24px 0; }
+.gallery-detail-traits div { display: flex; flex-direction: column; gap: 5px; padding: 10px; border: 1px solid #3d3f42; background: #17191d; }
+.gallery-detail-traits span { color: #8e908b; font: 9px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .08em; }
+.gallery-detail-traits strong { color: #eee9dc; font-size: 13px; }
+@media (max-width: 620px) { .gallery-detail-overlay { padding: 12px; } .gallery-detail-modal { padding: 12px; box-shadow: 6px 6px 0 #ff6b35; } .gallery-detail-grid { grid-template-columns: 1fr; gap: 15px; } .gallery-detail-copy { padding: 7px 4px 12px; } .gallery-detail-copy h2 { font-size: 42px; } .gallery-detail-traits { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 900px) { .gallery-intro { grid-template-columns: 1fr; } .gallery-stat-panel { max-width: 360px; } .gallery-toolbar { align-items: flex-start; flex-direction: column; } .gallery-controls { justify-content: flex-start; } .gallery-skeletons, .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 620px) { .gallery-nav { display: none; } .gallery-intro { padding: 16vw 6vw 12vw; } .gallery-catalog { padding: 12vw 6vw 18vw; } .gallery-controls, .gallery-search, .gallery-select { width: 100%; } .gallery-search input { flex: 1; width: auto; } .gallery-skeletons, .gallery-grid { grid-template-columns: 1fr; } .gallery-card:nth-child(4n + 2), .gallery-card:nth-child(4n + 3) { margin-top: 0; } }

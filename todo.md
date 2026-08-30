@@ -202,6 +202,14 @@
 - [x] Tester le rendu responsive, TypeScript et le build de production.
 - [x] Sauvegarder et publier la nouvelle galerie.
 
+## Confirmed follow-up — Gallery access and details
+
+- [x] Ajouter un second `View Full Collection` dans la section `The collection`.
+- [x] Ajouter un bouton `Back to home` dans la galerie dédiée.
+- [x] Ajouter une fiche détaillée au clic sur chaque NFT avec image et métadonnées live.
+- [x] Vérifier les interactions desktop/mobile, TypeScript et le build.
+- [x] Sauvegarder et publier la mise à jour.
+
 ## Modification — Home access button
 
 - [x] Ajouter le bouton anglais `View Full Collection` sur la page d’accueil.
