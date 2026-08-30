@@ -1,4 +1,13 @@
-# Extension — Live NFT & Metadata
+# Extension — Full Live Collection Index
+
+- [x] Auditer la pagination actuelle et le curseur token.
+- [x] Charger toute la supply par lots contrôlés jusqu’à 10 000 tokens.
+- [x] Ajouter la progression, l’état de pause/erreur et le chargement total.
+- [x] Préserver l’accès aux images, descriptions et attributs réels.
+- [x] Vérifier les performances et le rendu responsive.
+- [x] Recompiler et sauvegarder la galerie complète.
+
+## Extension — Live NFT & Metadata
 
 - [x] Vérifier le lecteur `totalSupply()` et `tokenURI()` existant.
 - [x] Afficher en direct image, nom, token ID, description et attributs.
