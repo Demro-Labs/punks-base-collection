@@ -360,6 +360,16 @@ footer a { display: flex; align-items: center; gap: 6px; }
   .live-refresh .spin { animation: none; }
 }
 
+/* Per-token refresh controls: low-noise archive actions with clear disabled feedback. */
+.punk-actions, .gallery-card-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.card-refresh, .gallery-card-refresh { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #aaa69a; background: transparent; color: #6d6c66; padding: 4px 6px; font: 9px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .06em; transition: color 160ms ease-out, border-color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out; }
+.card-refresh:hover:not(:disabled), .gallery-card-refresh:hover:not(:disabled) { border-color: #c95028; color: #c95028; background: rgba(201, 80, 40, .08); }
+.card-refresh:active:not(:disabled), .gallery-card-refresh:active:not(:disabled) { transform: scale(.97); }
+.card-refresh:disabled, .gallery-card-refresh:disabled { opacity: .6; cursor: wait; }
+.card-refresh .spin, .gallery-card-refresh .spin { animation: live-spin 900ms linear infinite; }
+.gallery-card-links { gap: 10px; }
+.gallery-card-links > a { display: inline-flex; color: #c95028; }
+
 /* Gallery style reminder: Base Terminal archive — technical mono labels, ivory catalog, orange signal, asymmetric editorial spacing. */
 .gallery-page { background: #17191d; }
 .gallery-nav { display: flex; gap: 25px; margin-left: auto; font: 10px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .1em; color: #a9aaa4; }

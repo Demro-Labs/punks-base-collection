@@ -231,6 +231,16 @@
 - [x] Relier le bouton à la Live Gallery complète.
 - [x] Vérifier le rendu desktop/mobile, le build et publier la modification.
 
+## Performance update — Fast live loading and per-token refresh
+
+- [x] Regrouper les appels `tokenURI()` dans des requêtes RPC batch.
+- [x] Limiter la concurrence metadata et essayer les passerelles IPFS en parallèle avec timeout.
+- [x] Supprimer les Promises rejetées du cache pour permettre un nouveau retry.
+- [x] Afficher les cartes progressivement sans attendre toute la batch.
+- [x] Ajouter `Refresh` sur chaque carte dans l’accueil et la Live Gallery.
+- [x] Gérer les erreurs de refresh via un retour utilisateur sans interrompre les autres NFT.
+- [x] Valider TypeScript, build production, rendu et interaction du bouton Refresh.
+
 ## Style reminder — Gallery
 
 La galerie reprend le design « Base Terminal » : interface anglaise, surfaces graphite/ivory, accent orange Base Signal, typographie condensée de terminal, bordures techniques et mise en page éditoriale non centrée.

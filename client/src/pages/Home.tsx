@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, BadgeCheck, Check, ChevronRight, CircleDollarSign, Clipboard, Copy, Database, ExternalLink, Github, LayoutDashboard, Menu, RefreshCw, ShieldCheck, Sparkles, Wallet, X } from "lucide-react";
 import { toast } from "sonner";
 import { MARKETPLACE_MAINNET_ADDRESS, ROYALTY_PERCENT, ROYALTY_RECIPIENT } from "@/lib/marketplace";
+import { fetchLiveSupply, readLiveNft, readLiveNfts, type LiveCollectionNft } from "@/lib/live-collection";
 
 const CONTRACT = "0xb9110ba3266f4983193c0d5f55c792a94368af28";
 const BASE_CHAIN_ID = "0x2105";
@@ -12,11 +13,10 @@ type View = "collection" | "creator" | "wallet";
 type Action = "buy" | "sell" | "list" | null;
 
 const shortAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
-const BASE_RPC = "https://mainnet.base.org";
 const OPENSEA_COLLECTION_URL = "https://opensea.io/collection/punks-base-1";
 const RARIBLE_COLLECTION_URL = "https://og.rarible.com/collection/base/0xb9110ba3266f4983193c0d5f55c792a94368af28/items";
 
-type NftItem = { id: string; name: string; trait: string; price: string; image: string; tokenId: string; listed?: boolean; description?: string; attributes?: Array<{ trait_type?: string; value?: string }> };
+type NftItem = { id: string; name: string; trait: string; price: string; image: string; tokenId: string; listed?: boolean; description?: string; attributes?: Array<{ trait_type?: string; value?: string | number }> };
 type FeaturedItem = { id: string; label: string; image: string; tokenId?: string };
 const FEATURED_ITEMS: FeaturedItem[] = [
   { id: "635", label: "Punk #635", tokenId: "635", image: "./assets/cryptopunk-635.png" },
@@ -24,63 +24,24 @@ const FEATURED_ITEMS: FeaturedItem[] = [
   { id: "IMG_3579", label: "Featured collection item", image: "./assets/IMG_3579.png" },
 ];
 
-async function rpc(method: string, params: unknown[] = []) {
-  const response = await fetch(BASE_RPC, { method: "POST", cache: "no-store", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method, params }) });
-  const payload = await response.json();
-  if (payload.error) throw new Error(payload.error.message || "Base RPC error");
-  return payload.result;
+function mergeNftItems(current: NftItem[], incoming: NftItem[]) {
+  const map = new Map(current.map((item) => [item.tokenId, item]));
+  incoming.forEach((item) => map.set(item.tokenId, item));
+  return Array.from(map.values());
 }
 
-function decodeAbiString(value: string) {
-  const hex = value?.replace(/^0x/, "") || "";
-  if (!hex) return "";
-  try {
-    const offset = Number.parseInt(hex.slice(0, 64), 16) * 2;
-    const length = Number.parseInt(hex.slice(offset, offset + 64), 16) * 2;
-    const data = hex.slice(offset + 64, offset + 64 + length);
-    return decodeURIComponent(data.replace(/(..)/g, "%$1"));
-  } catch { return ""; }
-}
-
-function normalizeUri(uri: string) {
-  if (!uri) return "";
-  if (uri.startsWith("ipfs://")) return `https://ipfs.filebase.io/ipfs/${uri.slice(7)}`;
-  if (uri.startsWith("ar://")) return `https://arweave.net/${uri.slice(5)}`;
-  return uri;
-}
-
-function uriCandidates(uri: string) {
-  if (!uri.startsWith("ipfs://")) return [normalizeUri(uri)];
-  const path = uri.slice(7);
-  return [`https://ipfs.filebase.io/ipfs/${path}`, `https://ipfs.io/ipfs/${path}`, `https://dweb.link/ipfs/${path}`];
-}
-
-async function fetchMetadataJson(uri: string) {
-  let lastError: unknown;
-  for (const candidate of uriCandidates(uri)) {
-    try {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 12000);
-      const response = await fetch(candidate, { signal: controller.signal, cache: "no-store" });
-      window.clearTimeout(timeout);
-      if (!response.ok) throw new Error(`Metadata gateway returned ${response.status}`);
-      return response.json();
-    } catch (error) { lastError = error; }
-  }
-  throw lastError || new Error("Metadata gateway unavailable");
-}
-
-async function fetchNftFromChain(tokenIndex: number): Promise<NftItem | null> {
-  try {
-    const encodedId = tokenIndex.toString(16).padStart(64, "0");
-    const rawUri = await rpc("eth_call", [{ to: CONTRACT, data: `0xc87b56dd${encodedId}` }, "latest"]);
-    const metadataUri = decodeAbiString(rawUri);
-    if (!metadataUri) return null;
-    const metadata = await fetchMetadataJson(metadataUri);
-    const image = normalizeUri(metadata.image || metadata.image_url || "");
-    if (!image) return null;
-    return { id: String(tokenIndex).padStart(4, "0"), tokenId: String(tokenIndex), name: metadata.name || `Punk / ${tokenIndex}`, trait: metadata.attributes?.slice?.(0, 2).map((item: any) => `${item.trait_type}: ${item.value}`).join(" · ") || "On-chain metadata", price: "—", image, description: metadata.description, attributes: metadata.attributes, listed: false };
-  } catch { return null; }
+function mapLiveNft(item: LiveCollectionNft): NftItem {
+  return {
+    id: item.tokenId.padStart(4, "0"),
+    tokenId: item.tokenId,
+    name: item.name,
+    trait: item.attributes.slice(0, 2).map((attribute) => `${attribute.trait_type || "Trait"}: ${String(attribute.value ?? "—")}`).join(" · ") || "On-chain metadata",
+    price: "—",
+    image: item.image,
+    description: item.description,
+    attributes: item.attributes,
+    listed: false,
+  };
 }
 
 export default function Home() {
@@ -100,6 +61,7 @@ export default function Home() {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [indexingAll, setIndexingAll] = useState(false);
+  const [refreshingTokenId, setRefreshingTokenId] = useState<string | null>(null);
   const contractLabel = useMemo(() => `${CONTRACT.slice(0, 8)}…${CONTRACT.slice(-6)}`, []);
   const scannedCount = supply ? Math.min(nextTokenIndex - 1, supply) : 0;
 
@@ -111,14 +73,13 @@ export default function Home() {
         setMetadataError(null);
         setNfts([]);
         setNextTokenIndex(1);
-        const rawSupply = await rpc("eth_call", [{ to: CONTRACT, data: "0x18160ddd" }, "latest"]);
-        const total = Number.parseInt(rawSupply, 16);
+        const total = await fetchLiveSupply();
         if (!Number.isFinite(total) || total <= 0) throw new Error("The contract did not return a readable total supply.");
         setSupply(total);
         const batchEnd = Math.min(total, 12);
         const ids = Array.from({ length: batchEnd }, (_, index) => index + 1);
-        const loaded = await Promise.all(ids.map(fetchNftFromChain));
-        if (!cancelled) { const valid = loaded.filter(Boolean) as NftItem[]; setNfts(valid); setNextTokenIndex(batchEnd + 1); setLastSyncedAt(new Date().toISOString()); if (!valid.length) setMetadataError("No readable token metadata was returned by the contract."); }
+        const loaded = (await readLiveNfts(ids, false, (item) => { if (!cancelled) { setNfts((current) => current.some((entry) => entry.tokenId === item.tokenId) ? current : [...current, mapLiveNft(item)]); setLoadingNfts(false); } })).map(mapLiveNft);
+        if (!cancelled) { setNfts(loaded); setNextTokenIndex(batchEnd + 1); setLastSyncedAt(new Date().toISOString()); if (!loaded.length) setMetadataError("No readable token metadata was returned by the contract."); }
       } catch (error: any) { if (!cancelled) setMetadataError(error?.message || "Unable to load this collection from Base."); }
       finally { if (!cancelled) setLoadingNfts(false); }
     }
@@ -130,8 +91,8 @@ export default function Home() {
     if (!supply || nextTokenIndex > supply || indexingAll) return;
     const start = nextTokenIndex;
     const end = Math.min(supply, start + 11);
-    const loaded = (await Promise.all(Array.from({ length: end - start + 1 }, (_, offset) => fetchNftFromChain(start + offset)))).filter(Boolean) as NftItem[];
-    setNfts((current) => [...current, ...loaded]);
+    const loaded = (await readLiveNfts(Array.from({ length: end - start + 1 }, (_, offset) => start + offset), false, (item) => setNfts((current) => current.some((entry) => entry.tokenId === item.tokenId) ? current : [...current, mapLiveNft(item)]))).map(mapLiveNft);
+    setNfts((current) => mergeNftItems(current, loaded));
     setNextTokenIndex(end + 1);
     setVisibleCount((count) => count + 12);
     setLastSyncedAt(new Date().toISOString());
@@ -145,8 +106,8 @@ export default function Home() {
     try {
       while (cursor <= supply) {
         const end = Math.min(supply, cursor + 31);
-        const loaded = (await Promise.all(Array.from({ length: end - cursor + 1 }, (_, offset) => fetchNftFromChain(cursor + offset)))).filter(Boolean) as NftItem[];
-        setNfts((current) => [...current, ...loaded]);
+        const loaded = (await readLiveNfts(Array.from({ length: end - cursor + 1 }, (_, offset) => cursor + offset), false, (item) => setNfts((current) => current.some((entry) => entry.tokenId === item.tokenId) ? current : [...current, mapLiveNft(item)]))).map(mapLiveNft);
+        setNfts((current) => mergeNftItems(current, loaded));
         cursor = end + 1;
         setNextTokenIndex(cursor);
         setVisibleCount((count) => Math.max(count, 24 + Math.max(0, cursor - 1)));
@@ -157,6 +118,23 @@ export default function Home() {
       setMetadataError(error?.message || "The live collection index stopped before reaching the full supply.");
     } finally {
       setIndexingAll(false);
+    }
+  }
+
+  async function refreshNft(tokenId: string) {
+    setRefreshingTokenId(tokenId);
+    try {
+      const refreshed = await readLiveNft(Number(tokenId), true);
+      if (!refreshed) throw new Error("This token metadata is temporarily unavailable.");
+      const mapped = mapLiveNft(refreshed);
+      setNfts((current) => current.map((item) => item.tokenId === tokenId ? mapped : item));
+      setSelectedNft((current) => current?.tokenId === tokenId ? mapped : current);
+      setLastSyncedAt(new Date().toISOString());
+      toast.success(`Token #${tokenId} refreshed from Base.`);
+    } catch (error: any) {
+      toast.error(error?.message || `Unable to refresh token #${tokenId}.`);
+    } finally {
+      setRefreshingTokenId(null);
     }
   }
 
@@ -204,7 +182,7 @@ export default function Home() {
         <section className="hero-section"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-line" /> ARCHIVE 001 / BASE MAINNET</div><h1>Small format.<br /><em>On-chain</em><br />identity.</h1><p className="hero-lede">Punks Base is a collection of digital characters, recorded on Base and made for people who prefer proof over promises.</p><div className="hero-cta-row"><button className="button button-orange" onClick={() => scrollTo("collection")}>Explore collection <ArrowUpRight size={17} /></button><a className="button button-orange gallery-access-button" href="./gallery">View Full Collection <ArrowUpRight size={17} /></a><button className="button button-ghost" onClick={connectMetaMask}><Wallet size={16} /> Connect MetaMask</button></div><div className="hero-note"><ShieldCheck size={15} /> Public contract · Base network · transparent reading <span className="verified-badge"><img src="./assets/verifier.png" alt="" /> Verified on Base</span></div></div><div className="hero-art-wrap"><div className="art-index">FIG. 001<br /><span>PUNK / BASE</span></div>{nfts[0] ? <img className="hero-art real-nft-image" src={nfts[0].image} alt={nfts[0].name} /> : <div className="hero-image-loading">{loadingNfts ? "WAITING FOR REAL TOKEN IMAGE / BASE" : "REAL TOKEN IMAGE UNAVAILABLE"}</div>}<div className="art-caption"><span>01</span><span>ORIGINAL CHARACTER STUDY</span><span>BASE / 8453</span></div></div></section>
         <section className="ticker"><span>COLLECTION / PUNKS BASE</span><span>NETWORK / BASE</span><span>CONTRACT / {contractLabel}</span><span>STANDARD / ERC-721</span><span>COLLECTION / PUNKS BASE</span></section>
         <section id="manifesto" className="manifesto-section"><div className="section-index">[ 00 / NOTE ]</div><div className="manifesto-content"><p className="section-kicker">A PROTOCOL FOR TINY IDENTITIES</p><h2>Every Punk is a <span>signature.</span></h2><p>No inflated roadmap. No magical access promise. Just a readable collection, a verifiable contract and a new place for avatars with nothing to prove.</p><a className="text-link" href={BASESCAN_URL} target="_blank" rel="noreferrer">Read contract on BaseScan <ArrowUpRight size={15} /></a></div><div className="manifesto-stamp"><img src="./assets/cryptopunk-2890.png" alt="" /><span>VERIFIED<br />ON BASE</span></div></section>
-        <section id="collection" className="collection-section"><div className="collection-head"><div><p className="section-kicker">THE ARCHIVE / LIVE BASE DATA</p><h2>The collection<span>.</span></h2><a className="collection-gallery-link" href="./gallery">View Full Collection <ArrowUpRight size={14} /></a></div><div className="collection-meta"><span><b>{supply ?? "—"}</b> total supply</span><span><b>8453</b> chain id</span><button className="live-refresh" onClick={() => setRefreshNonce((value) => value + 1)} disabled={loadingNfts || indexingAll}><RefreshCw size={14} className={loadingNfts ? "spin" : ""} /> {loadingNfts ? "SYNCING" : "REFRESH LIVE DATA"}</button><button className="live-refresh full-index-button" onClick={loadAllMetadata} disabled={loadingNfts || indexingAll || !supply || scannedCount >= supply}><Database size={14} className={indexingAll ? "spin" : ""} /> {indexingAll ? `INDEXING ${scannedCount}/${supply}` : "LOAD ALL 10,000"}</button>{lastSyncedAt && <small>SYNCED {new Date(lastSyncedAt).toLocaleTimeString()}</small>}</div></div><div className="collection-layout"><aside className="filter-rail"><span className="rail-label">INDEX</span><button className="filter-active">01 / ALL PUNKS</button><button onClick={() => toast.info("Trait filtering is ready for the metadata index.")}>02 / TRAITS</button><button onClick={() => { setView("wallet"); scrollTo("dashboard"); }}>03 / MY WALLET</button><div className="rail-bottom">SORT<br /><button onClick={() => toast.info("Sorting will use the live marketplace index.")}>LATEST <ChevronRight size={14} /></button></div></aside><div className="featured-items" aria-label="Featured collection items">{FEATURED_ITEMS.map((item) => <article className="featured-item" key={item.id}><div className="featured-image-wrap"><img src={item.image} alt={item.label} /><span className="featured-check"><img src="./assets/verifier.png" alt="" /> Verified on Base</span></div><div className="featured-item-meta"><div><span className="section-kicker">FEATURED ITEM</span><h3>{item.label}</h3></div>{item.tokenId ? <a href={`https://opensea.io/assets/base/${CONTRACT}/${item.tokenId}`} target="_blank" rel="noreferrer" aria-label={`Open ${item.label} on OpenSea`}><ExternalLink size={14} /></a> : <BadgeCheck size={16} aria-label="Verified collection image" />}</div></article>)}</div><div className="metadata-state">{loadingNfts ? <><RefreshCw size={15} /> Reading real tokenURI metadata from Base…</> : metadataError ? <><ShieldCheck size={15} /> {metadataError} <a href={RARIBLE_COLLECTION_URL} target="_blank" rel="noreferrer">Open marketplace collection <ExternalLink size={13} /></a></> : <><BadgeCheck size={15} /> Live on-chain metadata · {nfts.length} readable / {scannedCount} scanned / {supply ?? "—"} total</>}</div>{loadingNfts && <div className="metadata-skeleton-grid" aria-label="Loading real NFT metadata"><div /><div /><div /></div>}{!loadingNfts && nfts.length > 0 && <div className="punk-grid">{nfts.slice(0, visibleCount).map((punk, index) => <article className={`punk-card card-${index + 1}`} key={punk.id}><div className="punk-image-wrap"><span className="card-number">#{punk.id}</span><img className="real-nft-image" src={punk.image} alt={punk.name} /><span className="scan-line" /></div><div className="punk-info"><div><h3>{punk.name}</h3><p>{punk.trait}</p></div><div className="punk-price"><span>PRICE</span><strong>{punk.price}</strong></div></div><div className="punk-actions"><button className="card-link" onClick={() => setSelectedNft(punk)}>Metadata <ChevronRight size={14} /></button><a className="sell-link" href={`https://opensea.io/assets/base/${CONTRACT}/${punk.tokenId}`} target="_blank" rel="noreferrer">OpenSea <ExternalLink size={14} /></a></div></article>)}</div>}{!loadingNfts && nfts.length > 0 && nfts.length < (supply ?? 0) && <button className="load-more" onClick={loadMoreMetadata} disabled={indexingAll}>Load next metadata batch <ChevronRight size={14} /></button>}</div></section>
+        <section id="collection" className="collection-section"><div className="collection-head"><div><p className="section-kicker">THE ARCHIVE / LIVE BASE DATA</p><h2>The collection<span>.</span></h2><a className="collection-gallery-link" href="./gallery">View Full Collection <ArrowUpRight size={14} /></a></div><div className="collection-meta"><span><b>{supply ?? "—"}</b> total supply</span><span><b>8453</b> chain id</span><button className="live-refresh" onClick={() => setRefreshNonce((value) => value + 1)} disabled={loadingNfts || indexingAll}><RefreshCw size={14} className={loadingNfts ? "spin" : ""} /> {loadingNfts ? "SYNCING" : "REFRESH LIVE DATA"}</button><button className="live-refresh full-index-button" onClick={loadAllMetadata} disabled={loadingNfts || indexingAll || !supply || scannedCount >= supply}><Database size={14} className={indexingAll ? "spin" : ""} /> {indexingAll ? `INDEXING ${scannedCount}/${supply}` : "LOAD ALL 10,000"}</button>{lastSyncedAt && <small>SYNCED {new Date(lastSyncedAt).toLocaleTimeString()}</small>}</div></div><div className="collection-layout"><aside className="filter-rail"><span className="rail-label">INDEX</span><button className="filter-active">01 / ALL PUNKS</button><button onClick={() => toast.info("Trait filtering is ready for the metadata index.")}>02 / TRAITS</button><button onClick={() => { setView("wallet"); scrollTo("dashboard"); }}>03 / MY WALLET</button><div className="rail-bottom">SORT<br /><button onClick={() => toast.info("Sorting will use the live marketplace index.")}>LATEST <ChevronRight size={14} /></button></div></aside><div className="featured-items" aria-label="Featured collection items">{FEATURED_ITEMS.map((item) => <article className="featured-item" key={item.id}><div className="featured-image-wrap"><img src={item.image} alt={item.label} /><span className="featured-check"><img src="./assets/verifier.png" alt="" /> Verified on Base</span></div><div className="featured-item-meta"><div><span className="section-kicker">FEATURED ITEM</span><h3>{item.label}</h3></div>{item.tokenId ? <a href={`https://opensea.io/assets/base/${CONTRACT}/${item.tokenId}`} target="_blank" rel="noreferrer" aria-label={`Open ${item.label} on OpenSea`}><ExternalLink size={14} /></a> : <BadgeCheck size={16} aria-label="Verified collection image" />}</div></article>)}</div><div className="metadata-state">{loadingNfts ? <><RefreshCw size={15} /> Reading real tokenURI metadata from Base…</> : metadataError ? <><ShieldCheck size={15} /> {metadataError} <a href={RARIBLE_COLLECTION_URL} target="_blank" rel="noreferrer">Open marketplace collection <ExternalLink size={13} /></a></> : <><BadgeCheck size={15} /> Live on-chain metadata · {nfts.length} readable / {scannedCount} scanned / {supply ?? "—"} total</>}</div>{loadingNfts && <div className="metadata-skeleton-grid" aria-label="Loading real NFT metadata"><div /><div /><div /></div>}{!loadingNfts && nfts.length > 0 && <div className="punk-grid">{nfts.slice(0, visibleCount).map((punk, index) => <article className={`punk-card card-${index + 1}`} key={punk.id}><div className="punk-image-wrap"><span className="card-number">#{punk.id}</span><img className="real-nft-image" src={punk.image} alt={punk.name} /><span className="scan-line" /></div><div className="punk-info"><div><h3>{punk.name}</h3><p>{punk.trait}</p></div><div className="punk-price"><span>PRICE</span><strong>{punk.price}</strong></div></div><div className="punk-actions"><button className="card-link" onClick={() => setSelectedNft(punk)}>Metadata <ChevronRight size={14} /></button><button className="card-refresh" onClick={() => void refreshNft(punk.tokenId)} disabled={refreshingTokenId === punk.tokenId} title={`Refresh ${punk.name} from Base`} aria-label={`Refresh ${punk.name} from Base`}><RefreshCw size={13} className={refreshingTokenId === punk.tokenId ? "spin" : ""} /> {refreshingTokenId === punk.tokenId ? "Refreshing" : "Refresh"}</button><a className="sell-link" href={`https://opensea.io/assets/base/${CONTRACT}/${punk.tokenId}`} target="_blank" rel="noreferrer">OpenSea <ExternalLink size={14} /></a></div></article>)}</div>}{!loadingNfts && nfts.length > 0 && nfts.length < (supply ?? 0) && <button className="load-more" onClick={loadMoreMetadata} disabled={indexingAll}>Load next metadata batch <ChevronRight size={14} /></button>}</div></section>
       </>}
 
       {view !== "collection" && <section id="dashboard" className="dashboard-page"><div className="dashboard-header"><div><p className="section-kicker">{view === "creator" ? "CREATOR CONTROL / 01" : "WALLET CONTROL / 02"}</p><h1>{view === "creator" ? <>Creator<br /><em>dashboard.</em></> : <>Your wallet<br /><em>terminal.</em></>}</h1><p className="dashboard-lede">{view === "creator" ? "A clear control surface for collection status, contract references and future marketplace configuration." : "Your Base account, holdings and marketplace activity in one verifiable view."}</p></div><div className="dashboard-status"><span className="status-box-label">CONNECTION STATUS</span><strong className={wallet ? "is-live" : ""}>{wallet ? "CONNECTED" : "NOT CONNECTED"}</strong><span>{wallet ? shortAddress(wallet) : "Connect a wallet to load live data"}</span><button className="button button-orange button-small" onClick={wallet ? disconnect : connectMetaMask}>{wallet ? "Disconnect" : "Connect wallet"}</button></div></div>
