@@ -1,6 +1,6 @@
 /*
- * Base Terminal data layer: live Punks reads stay read-only, batched, cancellable,
- * and resilient to RPC/IPFS rate limits. Keep this file free of UI concerns.
+ * Base Terminal data layer: live Punks reads stay read-only, batched,
+ * cancellable, locally recoverable, and resilient to RPC/IPFS rate limits.
  */
 
 export const PUNKS_BASE_CONTRACT = "0xb9110ba3266f4983193c0d5f55c792a94368af28";
@@ -19,6 +19,8 @@ const IPFS_GATEWAYS = [
 
 const RPC_TIMEOUT_MS = 8_000;
 const METADATA_TIMEOUT_MS = 6_000;
+const CACHE_DB_NAME = "punks-base-live-cache";
+const CACHE_STORE_NAME = "nfts";
 
 export type LiveAttribute = { trait_type?: string; value?: string | number };
 
@@ -30,8 +32,12 @@ export type LiveCollectionNft = {
   attributes: LiveAttribute[];
 };
 
-type RpcResult = { jsonrpc: string; id: number; result?: string; error?: { message?: string } };
+export type LiveReadCallbacks = {
+  onItem?: (item: LiveCollectionNft) => void;
+  onFailure?: (tokenId: number) => void;
+};
 
+type RpcResult = { jsonrpc: string; id: number; result?: string; error?: { message?: string } };
 type TokenUriEntry = { tokenId: number; uri: string };
 
 function withTimeout(init: RequestInit, timeoutMs: number) {
@@ -163,7 +169,7 @@ async function tokenUris(tokenIds: number[]) {
     const batch = await callRpcBatch(tokenIds);
     return batch.map((result, index) => ({ tokenId: tokenIds[index], uri: result.result ? decodeAbiString(result.result) : "" }));
   } catch {
-    const fallback = await mapWithConcurrency(tokenIds, 4, async (tokenId) => {
+    return mapWithConcurrency(tokenIds, 4, async (tokenId) => {
       try {
         const raw = await callRpc("eth_call", [{ to: PUNKS_BASE_CONTRACT, data: `0xc87b56dd${tokenId.toString(16).padStart(64, "0")}` }, "latest"]);
         return { tokenId, uri: decodeAbiString(raw) };
@@ -171,7 +177,6 @@ async function tokenUris(tokenIds: number[]) {
         return { tokenId, uri: "" };
       }
     });
-    return fallback;
   }
 }
 
@@ -204,16 +209,56 @@ export async function readLiveNft(tokenId: number, forceFresh = false): Promise<
   }
 }
 
-export async function readLiveNfts(tokenIds: number[], forceFresh = false, onItem?: (item: LiveCollectionNft) => void): Promise<LiveCollectionNft[]> {
+function openLiveCache() {
+  if (typeof indexedDB === "undefined") return Promise.resolve<IDBDatabase | null>(null);
+  return new Promise<IDBDatabase | null>((resolve) => {
+    const request = indexedDB.open(CACHE_DB_NAME, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(CACHE_STORE_NAME, { keyPath: "tokenId" });
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+  });
+}
+
+export async function readCachedLiveNfts(tokenIds?: number[]) {
+  const db = await openLiveCache();
+  if (!db) return [];
+  return new Promise<LiveCollectionNft[]>((resolve) => {
+    const request = db.transaction(CACHE_STORE_NAME, "readonly").objectStore(CACHE_STORE_NAME).getAll();
+    request.onsuccess = () => {
+      const allowed = tokenIds ? new Set(tokenIds.map(String)) : null;
+      resolve((request.result as LiveCollectionNft[]).filter((item) => !allowed || allowed.has(item.tokenId)));
+    };
+    request.onerror = () => resolve([]);
+  });
+}
+
+export async function cacheLiveNft(item: LiveCollectionNft) {
+  const db = await openLiveCache();
+  if (!db) return;
+  try {
+    db.transaction(CACHE_STORE_NAME, "readwrite").objectStore(CACHE_STORE_NAME).put(item);
+  } catch {
+    // IndexedDB is an optimization only; live reads remain the source of truth.
+  }
+}
+
+export async function readLiveNfts(tokenIds: number[], forceFresh = false, callbacks: LiveReadCallbacks = {}): Promise<LiveCollectionNft[]> {
   const ids = Array.from(new Set(tokenIds.filter((tokenId) => Number.isInteger(tokenId) && tokenId > 0)));
   if (!ids.length) return [];
   const entries = await tokenUris(ids);
+  entries.filter((entry) => !entry.uri).forEach((entry) => callbacks.onFailure?.(entry.tokenId));
   const resolved = await mapWithConcurrency(entries.filter((entry): entry is TokenUriEntry => Boolean(entry.uri)), 4, async (entry) => {
     try {
       const item = buildNft(entry.tokenId, await fetchMetadata(entry.uri, forceFresh));
-      if (item) onItem?.(item);
+      if (item) {
+        callbacks.onItem?.(item);
+        void cacheLiveNft(item);
+      } else {
+        callbacks.onFailure?.(entry.tokenId);
+      }
       return item;
     } catch {
+      callbacks.onFailure?.(entry.tokenId);
       return null;
     }
   });

@@ -241,6 +241,15 @@
 - [x] Gérer les erreurs de refresh via un retour utilisateur sans interrompre les autres NFT.
 - [x] Valider TypeScript, build production, rendu et interaction du bouton Refresh.
 
+## Final GitHub update — Retry, local cache and progress
+
+- [x] Add IndexedDB cache for resolved live NFT metadata.
+- [x] Restore cached records immediately while live Base reads continue.
+- [x] Add failure callbacks and a retry queue for temporary RPC/IPFS failures.
+- [x] Add detailed scanned/readable/pending/retry progress to Gallery.
+- [x] Add retry controls and preserve per-NFT Refresh actions.
+- [x] Validate TypeScript, production build and responsive Gallery rendering.
+
 ## Style reminder — Gallery
 
 La galerie reprend le design « Base Terminal » : interface anglaise, surfaces graphite/ivory, accent orange Base Signal, typographie condensée de terminal, bordures techniques et mise en page éditoriale non centrée.

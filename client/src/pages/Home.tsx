@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, BadgeCheck, Check, ChevronRight, CircleDollarSign, Clipboard, Copy, Database, ExternalLink, Github, LayoutDashboard, Menu, RefreshCw, ShieldCheck, Sparkles, Wallet, X } from "lucide-react";
 import { toast } from "sonner";
 import { MARKETPLACE_MAINNET_ADDRESS, ROYALTY_PERCENT, ROYALTY_RECIPIENT } from "@/lib/marketplace";
-import { fetchLiveSupply, readLiveNft, readLiveNfts, type LiveCollectionNft } from "@/lib/live-collection";
+import { cacheLiveNft, fetchLiveSupply, readCachedLiveNfts, readLiveNft, readLiveNfts, type LiveCollectionNft } from "@/lib/live-collection";
 
 const CONTRACT = "0xb9110ba3266f4983193c0d5f55c792a94368af28";
 const BASE_CHAIN_ID = "0x2105";
@@ -62,8 +62,10 @@ export default function Home() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [indexingAll, setIndexingAll] = useState(false);
   const [refreshingTokenId, setRefreshingTokenId] = useState<string | null>(null);
+  const [retryQueue, setRetryQueue] = useState<number[]>([]);
+  const [progress, setProgress] = useState({ scanned: 0, readable: 0, pending: 0, retrying: 0 });
   const contractLabel = useMemo(() => `${CONTRACT.slice(0, 8)}…${CONTRACT.slice(-6)}`, []);
-  const scannedCount = supply ? Math.min(nextTokenIndex - 1, supply) : 0;
+  const scannedCount = supply ? Math.min(Math.max(progress.scanned, nextTokenIndex - 1), supply) : progress.scanned;
 
   useEffect(() => {
     let cancelled = false;
@@ -71,15 +73,18 @@ export default function Home() {
       try {
         setLoadingNfts(true);
         setMetadataError(null);
-        setNfts([]);
-        setNextTokenIndex(1);
+        setRetryQueue([]);
+        setProgress({ scanned: 0, readable: 0, pending: 0, retrying: 0 });
+        const cached = await readCachedLiveNfts();
+        if (!cancelled && cached.length) { setNfts(cached.map(mapLiveNft)); setLoadingNfts(false); setProgress({ scanned: cached.length, readable: cached.length, pending: 0, retrying: 0 }); }
         const total = await fetchLiveSupply();
         if (!Number.isFinite(total) || total <= 0) throw new Error("The contract did not return a readable total supply.");
         setSupply(total);
         const batchEnd = Math.min(total, 12);
         const ids = Array.from({ length: batchEnd }, (_, index) => index + 1);
-        const loaded = (await readLiveNfts(ids, false, (item) => { if (!cancelled) { setNfts((current) => current.some((entry) => entry.tokenId === item.tokenId) ? current : [...current, mapLiveNft(item)]); setLoadingNfts(false); } })).map(mapLiveNft);
-        if (!cancelled) { setNfts(loaded); setNextTokenIndex(batchEnd + 1); setLastSyncedAt(new Date().toISOString()); if (!loaded.length) setMetadataError("No readable token metadata was returned by the contract."); }
+        setProgress((current) => ({ ...current, pending: ids.length }));
+        const loaded = (await readLiveNfts(ids, false, { onItem: (item) => { if (!cancelled) { setNfts((current) => mergeNftItems(current, [mapLiveNft(item)])); setLoadingNfts(false); setProgress((current) => ({ ...current, scanned: current.scanned + 1, readable: current.readable + 1, pending: Math.max(0, current.pending - 1) })); } }, onFailure: (tokenId) => { if (!cancelled) { setRetryQueue((current) => current.includes(tokenId) ? current : [...current, tokenId]); setProgress((current) => ({ ...current, scanned: current.scanned + 1, pending: Math.max(0, current.pending - 1), retrying: current.retrying + 1 })); } } })).map(mapLiveNft);
+        if (!cancelled) { setNfts((current) => mergeNftItems(current, loaded)); setProgress((current) => ({ ...current, scanned: Math.max(current.scanned, batchEnd), pending: 0 })); setNextTokenIndex(batchEnd + 1); setLastSyncedAt(new Date().toISOString()); if (!loaded.length && !cached.length) setMetadataError("No readable token metadata was returned by the contract."); }
       } catch (error: any) { if (!cancelled) setMetadataError(error?.message || "Unable to load this collection from Base."); }
       finally { if (!cancelled) setLoadingNfts(false); }
     }
@@ -91,9 +96,12 @@ export default function Home() {
     if (!supply || nextTokenIndex > supply || indexingAll) return;
     const start = nextTokenIndex;
     const end = Math.min(supply, start + 11);
-    const loaded = (await readLiveNfts(Array.from({ length: end - start + 1 }, (_, offset) => start + offset), false, (item) => setNfts((current) => current.some((entry) => entry.tokenId === item.tokenId) ? current : [...current, mapLiveNft(item)]))).map(mapLiveNft);
+    const ids = Array.from({ length: end - start + 1 }, (_, offset) => start + offset);
+    setProgress((current) => ({ ...current, pending: current.pending + ids.length }));
+    const loaded = (await readLiveNfts(ids, false, { onItem: (item) => { setNfts((current) => mergeNftItems(current, [mapLiveNft(item)])); setProgress((current) => ({ ...current, scanned: current.scanned + 1, readable: current.readable + 1, pending: Math.max(0, current.pending - 1) })); }, onFailure: (tokenId) => { setRetryQueue((current) => current.includes(tokenId) ? current : [...current, tokenId]); setProgress((current) => ({ ...current, scanned: current.scanned + 1, pending: Math.max(0, current.pending - 1), retrying: current.retrying + 1 })); } })).map(mapLiveNft);
     setNfts((current) => mergeNftItems(current, loaded));
     setNextTokenIndex(end + 1);
+    setProgress((current) => ({ ...current, scanned: Math.max(current.scanned, end), pending: 0 }));
     setVisibleCount((count) => count + 12);
     setLastSyncedAt(new Date().toISOString());
   }
@@ -106,10 +114,13 @@ export default function Home() {
     try {
       while (cursor <= supply) {
         const end = Math.min(supply, cursor + 31);
-        const loaded = (await readLiveNfts(Array.from({ length: end - cursor + 1 }, (_, offset) => cursor + offset), false, (item) => setNfts((current) => current.some((entry) => entry.tokenId === item.tokenId) ? current : [...current, mapLiveNft(item)]))).map(mapLiveNft);
+        const ids = Array.from({ length: end - cursor + 1 }, (_, offset) => cursor + offset);
+        setProgress((current) => ({ ...current, pending: current.pending + ids.length }));
+        const loaded = (await readLiveNfts(ids, false, { onItem: (item) => { setNfts((current) => mergeNftItems(current, [mapLiveNft(item)])); setProgress((current) => ({ ...current, scanned: current.scanned + 1, readable: current.readable + 1, pending: Math.max(0, current.pending - 1) })); }, onFailure: (tokenId) => { setRetryQueue((current) => current.includes(tokenId) ? current : [...current, tokenId]); setProgress((current) => ({ ...current, scanned: current.scanned + 1, pending: Math.max(0, current.pending - 1), retrying: current.retrying + 1 })); } })).map(mapLiveNft);
         setNfts((current) => mergeNftItems(current, loaded));
         cursor = end + 1;
         setNextTokenIndex(cursor);
+        setProgress((current) => ({ ...current, scanned: Math.max(current.scanned, end), pending: 0 }));
         setVisibleCount((count) => Math.max(count, 24 + Math.max(0, cursor - 1)));
         setLastSyncedAt(new Date().toISOString());
         await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
@@ -118,6 +129,19 @@ export default function Home() {
       setMetadataError(error?.message || "The live collection index stopped before reaching the full supply.");
     } finally {
       setIndexingAll(false);
+    }
+  }
+
+  async function retryFailedMetadata() {
+    if (indexingAll || !retryQueue.length) return;
+    const pendingIds = retryQueue;
+    setRetryQueue([]);
+    setProgress((current) => ({ ...current, retrying: pendingIds.length }));
+    try {
+      const loaded = (await readLiveNfts(pendingIds, true, { onItem: (item) => { const mapped = mapLiveNft(item); setNfts((current) => mergeNftItems(current, [mapped])); void cacheLiveNft(item); setProgress((current) => ({ ...current, readable: current.readable + 1, retrying: Math.max(0, current.retrying - 1) })); }, onFailure: (tokenId) => setRetryQueue((current) => current.includes(tokenId) ? current : [...current, tokenId]) })).map(mapLiveNft);
+      setNfts((current) => mergeNftItems(current, loaded));
+    } finally {
+      setProgress((current) => ({ ...current, retrying: 0 }));
     }
   }
 
@@ -130,6 +154,8 @@ export default function Home() {
       setNfts((current) => current.map((item) => item.tokenId === tokenId ? mapped : item));
       setSelectedNft((current) => current?.tokenId === tokenId ? mapped : current);
       setLastSyncedAt(new Date().toISOString());
+      void cacheLiveNft(refreshed);
+      setRetryQueue((current) => current.filter((id) => id !== Number(tokenId)));
       toast.success(`Token #${tokenId} refreshed from Base.`);
     } catch (error: any) {
       toast.error(error?.message || `Unable to refresh token #${tokenId}.`);
@@ -182,7 +208,7 @@ export default function Home() {
         <section className="hero-section"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-line" /> ARCHIVE 001 / BASE MAINNET</div><h1>Small format.<br /><em>On-chain</em><br />identity.</h1><p className="hero-lede">Punks Base is a collection of digital characters, recorded on Base and made for people who prefer proof over promises.</p><div className="hero-cta-row"><button className="button button-orange" onClick={() => scrollTo("collection")}>Explore collection <ArrowUpRight size={17} /></button><a className="button button-orange gallery-access-button" href="./gallery">View Full Collection <ArrowUpRight size={17} /></a><button className="button button-ghost" onClick={connectMetaMask}><Wallet size={16} /> Connect MetaMask</button></div><div className="hero-note"><ShieldCheck size={15} /> Public contract · Base network · transparent reading <span className="verified-badge"><img src="./assets/verifier.png" alt="" /> Verified on Base</span></div></div><div className="hero-art-wrap"><div className="art-index">FIG. 001<br /><span>PUNK / BASE</span></div>{nfts[0] ? <img className="hero-art real-nft-image" src={nfts[0].image} alt={nfts[0].name} /> : <div className="hero-image-loading">{loadingNfts ? "WAITING FOR REAL TOKEN IMAGE / BASE" : "REAL TOKEN IMAGE UNAVAILABLE"}</div>}<div className="art-caption"><span>01</span><span>ORIGINAL CHARACTER STUDY</span><span>BASE / 8453</span></div></div></section>
         <section className="ticker"><span>COLLECTION / PUNKS BASE</span><span>NETWORK / BASE</span><span>CONTRACT / {contractLabel}</span><span>STANDARD / ERC-721</span><span>COLLECTION / PUNKS BASE</span></section>
         <section id="manifesto" className="manifesto-section"><div className="section-index">[ 00 / NOTE ]</div><div className="manifesto-content"><p className="section-kicker">A PROTOCOL FOR TINY IDENTITIES</p><h2>Every Punk is a <span>signature.</span></h2><p>No inflated roadmap. No magical access promise. Just a readable collection, a verifiable contract and a new place for avatars with nothing to prove.</p><a className="text-link" href={BASESCAN_URL} target="_blank" rel="noreferrer">Read contract on BaseScan <ArrowUpRight size={15} /></a></div><div className="manifesto-stamp"><img src="./assets/cryptopunk-2890.png" alt="" /><span>VERIFIED<br />ON BASE</span></div></section>
-        <section id="collection" className="collection-section"><div className="collection-head"><div><p className="section-kicker">THE ARCHIVE / LIVE BASE DATA</p><h2>The collection<span>.</span></h2><a className="collection-gallery-link" href="./gallery">View Full Collection <ArrowUpRight size={14} /></a></div><div className="collection-meta"><span><b>{supply ?? "—"}</b> total supply</span><span><b>8453</b> chain id</span><button className="live-refresh" onClick={() => setRefreshNonce((value) => value + 1)} disabled={loadingNfts || indexingAll}><RefreshCw size={14} className={loadingNfts ? "spin" : ""} /> {loadingNfts ? "SYNCING" : "REFRESH LIVE DATA"}</button><button className="live-refresh full-index-button" onClick={loadAllMetadata} disabled={loadingNfts || indexingAll || !supply || scannedCount >= supply}><Database size={14} className={indexingAll ? "spin" : ""} /> {indexingAll ? `INDEXING ${scannedCount}/${supply}` : "LOAD ALL 10,000"}</button>{lastSyncedAt && <small>SYNCED {new Date(lastSyncedAt).toLocaleTimeString()}</small>}</div></div><div className="collection-layout"><aside className="filter-rail"><span className="rail-label">INDEX</span><button className="filter-active">01 / ALL PUNKS</button><button onClick={() => toast.info("Trait filtering is ready for the metadata index.")}>02 / TRAITS</button><button onClick={() => { setView("wallet"); scrollTo("dashboard"); }}>03 / MY WALLET</button><div className="rail-bottom">SORT<br /><button onClick={() => toast.info("Sorting will use the live marketplace index.")}>LATEST <ChevronRight size={14} /></button></div></aside><div className="featured-items" aria-label="Featured collection items">{FEATURED_ITEMS.map((item) => <article className="featured-item" key={item.id}><div className="featured-image-wrap"><img src={item.image} alt={item.label} /><span className="featured-check"><img src="./assets/verifier.png" alt="" /> Verified on Base</span></div><div className="featured-item-meta"><div><span className="section-kicker">FEATURED ITEM</span><h3>{item.label}</h3></div>{item.tokenId ? <a href={`https://opensea.io/assets/base/${CONTRACT}/${item.tokenId}`} target="_blank" rel="noreferrer" aria-label={`Open ${item.label} on OpenSea`}><ExternalLink size={14} /></a> : <BadgeCheck size={16} aria-label="Verified collection image" />}</div></article>)}</div><div className="metadata-state">{loadingNfts ? <><RefreshCw size={15} /> Reading real tokenURI metadata from Base…</> : metadataError ? <><ShieldCheck size={15} /> {metadataError} <a href={RARIBLE_COLLECTION_URL} target="_blank" rel="noreferrer">Open marketplace collection <ExternalLink size={13} /></a></> : <><BadgeCheck size={15} /> Live on-chain metadata · {nfts.length} readable / {scannedCount} scanned / {supply ?? "—"} total</>}</div>{loadingNfts && <div className="metadata-skeleton-grid" aria-label="Loading real NFT metadata"><div /><div /><div /></div>}{!loadingNfts && nfts.length > 0 && <div className="punk-grid">{nfts.slice(0, visibleCount).map((punk, index) => <article className={`punk-card card-${index + 1}`} key={punk.id}><div className="punk-image-wrap"><span className="card-number">#{punk.id}</span><img className="real-nft-image" src={punk.image} alt={punk.name} /><span className="scan-line" /></div><div className="punk-info"><div><h3>{punk.name}</h3><p>{punk.trait}</p></div><div className="punk-price"><span>PRICE</span><strong>{punk.price}</strong></div></div><div className="punk-actions"><button className="card-link" onClick={() => setSelectedNft(punk)}>Metadata <ChevronRight size={14} /></button><button className="card-refresh" onClick={() => void refreshNft(punk.tokenId)} disabled={refreshingTokenId === punk.tokenId} title={`Refresh ${punk.name} from Base`} aria-label={`Refresh ${punk.name} from Base`}><RefreshCw size={13} className={refreshingTokenId === punk.tokenId ? "spin" : ""} /> {refreshingTokenId === punk.tokenId ? "Refreshing" : "Refresh"}</button><a className="sell-link" href={`https://opensea.io/assets/base/${CONTRACT}/${punk.tokenId}`} target="_blank" rel="noreferrer">OpenSea <ExternalLink size={14} /></a></div></article>)}</div>}{!loadingNfts && nfts.length > 0 && nfts.length < (supply ?? 0) && <button className="load-more" onClick={loadMoreMetadata} disabled={indexingAll}>Load next metadata batch <ChevronRight size={14} /></button>}</div></section>
+        <section id="collection" className="collection-section"><div className="collection-head"><div><p className="section-kicker">THE ARCHIVE / LIVE BASE DATA</p><h2>The collection<span>.</span></h2><a className="collection-gallery-link" href="./gallery">View Full Collection <ArrowUpRight size={14} /></a></div><div className="collection-meta"><span><b>{supply ?? "—"}</b> total supply</span><span><b>8453</b> chain id</span><button className="live-refresh" onClick={() => setRefreshNonce((value) => value + 1)} disabled={loadingNfts || indexingAll}><RefreshCw size={14} className={loadingNfts ? "spin" : ""} /> {loadingNfts ? "SYNCING" : "REFRESH LIVE DATA"}</button><button className="live-refresh full-index-button" onClick={loadAllMetadata} disabled={loadingNfts || indexingAll || !supply || scannedCount >= supply}><Database size={14} className={indexingAll ? "spin" : ""} /> {indexingAll ? `INDEXING ${scannedCount}/${supply}` : "LOAD ALL 10,000"}</button>{retryQueue.length > 0 && <button className="live-refresh retry-index-button" onClick={() => void retryFailedMetadata()} disabled={indexingAll}><RefreshCw size={14} className={progress.retrying ? "spin" : ""} /> RETRY {retryQueue.length}</button>}{lastSyncedAt && <small>SYNCED {new Date(lastSyncedAt).toLocaleTimeString()}</small>}</div></div><div className="collection-layout"><aside className="filter-rail"><span className="rail-label">INDEX</span><button className="filter-active">01 / ALL PUNKS</button><button onClick={() => toast.info("Trait filtering is ready for the metadata index.")}>02 / TRAITS</button><button onClick={() => { setView("wallet"); scrollTo("dashboard"); }}>03 / MY WALLET</button><div className="rail-bottom">SORT<br /><button onClick={() => toast.info("Sorting will use the live marketplace index.")}>LATEST <ChevronRight size={14} /></button></div></aside><div className="featured-items" aria-label="Featured collection items">{FEATURED_ITEMS.map((item) => <article className="featured-item" key={item.id}><div className="featured-image-wrap"><img src={item.image} alt={item.label} /><span className="featured-check"><img src="./assets/verifier.png" alt="" /> Verified on Base</span></div><div className="featured-item-meta"><div><span className="section-kicker">FEATURED ITEM</span><h3>{item.label}</h3></div>{item.tokenId ? <a href={`https://opensea.io/assets/base/${CONTRACT}/${item.tokenId}`} target="_blank" rel="noreferrer" aria-label={`Open ${item.label} on OpenSea`}><ExternalLink size={14} /></a> : <BadgeCheck size={16} aria-label="Verified collection image" />}</div></article>)}</div><div className="metadata-state">{loadingNfts ? <><RefreshCw size={15} /> Reading real tokenURI metadata from Base…</> : metadataError ? <><ShieldCheck size={15} /> {metadataError} <a href={RARIBLE_COLLECTION_URL} target="_blank" rel="noreferrer">Open marketplace collection <ExternalLink size={13} /></a></> : <><BadgeCheck size={15} /> Live on-chain metadata · {nfts.length} readable / {scannedCount} scanned / {supply ?? "—"} total · {progress.pending} pending{retryQueue.length ? ` · ${retryQueue.length} retry queued` : ""}</>}</div>{loadingNfts && <div className="metadata-skeleton-grid" aria-label="Loading real NFT metadata"><div /><div /><div /></div>}{!loadingNfts && nfts.length > 0 && <div className="punk-grid">{nfts.slice(0, visibleCount).map((punk, index) => <article className={`punk-card card-${index + 1}`} key={punk.id}><div className="punk-image-wrap"><span className="card-number">#{punk.id}</span><img className="real-nft-image" src={punk.image} alt={punk.name} /><span className="scan-line" /></div><div className="punk-info"><div><h3>{punk.name}</h3><p>{punk.trait}</p></div><div className="punk-price"><span>PRICE</span><strong>{punk.price}</strong></div></div><div className="punk-actions"><button className="card-link" onClick={() => setSelectedNft(punk)}>Metadata <ChevronRight size={14} /></button><button className="card-refresh" onClick={() => void refreshNft(punk.tokenId)} disabled={refreshingTokenId === punk.tokenId} title={`Refresh ${punk.name} from Base`} aria-label={`Refresh ${punk.name} from Base`}><RefreshCw size={13} className={refreshingTokenId === punk.tokenId ? "spin" : ""} /> {refreshingTokenId === punk.tokenId ? "Refreshing" : "Refresh"}</button><a className="sell-link" href={`https://opensea.io/assets/base/${CONTRACT}/${punk.tokenId}`} target="_blank" rel="noreferrer">OpenSea <ExternalLink size={14} /></a></div></article>)}</div>}{!loadingNfts && nfts.length > 0 && nfts.length < (supply ?? 0) && <button className="load-more" onClick={loadMoreMetadata} disabled={indexingAll}>Load next metadata batch <ChevronRight size={14} /></button>}</div></section>
       </>}
 
       {view !== "collection" && <section id="dashboard" className="dashboard-page"><div className="dashboard-header"><div><p className="section-kicker">{view === "creator" ? "CREATOR CONTROL / 01" : "WALLET CONTROL / 02"}</p><h1>{view === "creator" ? <>Creator<br /><em>dashboard.</em></> : <>Your wallet<br /><em>terminal.</em></>}</h1><p className="dashboard-lede">{view === "creator" ? "A clear control surface for collection status, contract references and future marketplace configuration." : "Your Base account, holdings and marketplace activity in one verifiable view."}</p></div><div className="dashboard-status"><span className="status-box-label">CONNECTION STATUS</span><strong className={wallet ? "is-live" : ""}>{wallet ? "CONNECTED" : "NOT CONNECTED"}</strong><span>{wallet ? shortAddress(wallet) : "Connect a wallet to load live data"}</span><button className="button button-orange button-small" onClick={wallet ? disconnect : connectMetaMask}>{wallet ? "Disconnect" : "Connect wallet"}</button></div></div>

@@ -335,6 +335,7 @@ footer a { display: flex; align-items: center; gap: 6px; }
 }
 
 /* Base Terminal / live metadata controls: compact archive action, no layout shift, and reduced-motion friendly feedback. */
+.retry-index-button { border-color: #c95028; color: #c95028; }
 .live-refresh {
   display: inline-flex;
   align-items: center;
@@ -395,6 +396,18 @@ footer a { display: flex; align-items: center; gap: 6px; }
 .gallery-search input, .gallery-select select { min-width: 110px; border: 0; outline: 0; background: transparent; color: #17191d; font: inherit; text-transform: none; }
 .gallery-search input { width: 150px; }
 .gallery-search:focus-within, .gallery-select:focus-within { border-color: #c95028; }
+.gallery-progress { margin: -8px 0 30px; padding: 13px 0 17px; border-bottom: 1px solid #c8c4b8; }
+.gallery-progress-head, .gallery-progress-stats { display: flex; align-items: center; justify-content: space-between; gap: 12px; font: 9px 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.gallery-progress-head { color: #77766f; }
+.gallery-progress-head b { color: #c95028; font-weight: 500; }
+.gallery-progress-track { height: 4px; margin: 9px 0 11px; overflow: hidden; background: #d4cebf; }
+.gallery-progress-track span { display: block; height: 100%; background: #c95028; transition: width 220ms cubic-bezier(.23,1,.32,1); }
+.gallery-progress-stats { justify-content: flex-start; flex-wrap: wrap; color: #77766f; letter-spacing: .03em; text-transform: none; }
+.gallery-progress-stats b { color: #17191d; font-weight: 500; }
+.gallery-progress-stats .has-retries, .gallery-progress-stats .has-retries b { color: #b54b28; }
+.gallery-retry-button { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; border: 1px solid #c95028; background: transparent; color: #c95028; padding: 5px 8px; font: 9px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .05em; }
+.gallery-retry-button:hover:not(:disabled) { background: #c95028; color: #eee9dc; }
+.gallery-retry-button:disabled { opacity: .55; cursor: wait; }
 .gallery-skeletons, .gallery-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; align-items: start; }
 .gallery-skeletons div { aspect-ratio: 1; background: linear-gradient(110deg, #d8d2c5 25%, #f5f0e6 38%, #d8d2c5 55%); background-size: 300% 100%; animation: metadata-shimmer 1.6s linear infinite; }
 .gallery-card { min-width: 0; padding: 10px; background: #e0dbce; transition: transform .22s cubic-bezier(.23,1,.32,1), box-shadow .22s ease; }
@@ -432,4 +445,4 @@ footer a { display: flex; align-items: center; gap: 6px; }
 .gallery-detail-traits strong { color: #eee9dc; font-size: 13px; }
 @media (max-width: 620px) { .gallery-detail-overlay { padding: 12px; } .gallery-detail-modal { padding: 12px; box-shadow: 6px 6px 0 #ff6b35; } .gallery-detail-grid { grid-template-columns: 1fr; gap: 15px; } .gallery-detail-copy { padding: 7px 4px 12px; } .gallery-detail-copy h2 { font-size: 42px; } .gallery-detail-traits { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 900px) { .gallery-intro { grid-template-columns: 1fr; } .gallery-stat-panel { max-width: 360px; } .gallery-toolbar { align-items: flex-start; flex-direction: column; } .gallery-controls { justify-content: flex-start; } .gallery-skeletons, .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .gallery-nav { display: none; } .gallery-intro { padding: 16vw 6vw 12vw; } .gallery-catalog { padding: 12vw 6vw 18vw; } .gallery-controls, .gallery-search, .gallery-select { width: 100%; } .gallery-search input { flex: 1; width: auto; } .gallery-skeletons, .gallery-grid { grid-template-columns: 1fr; } .gallery-card:nth-child(4n + 2), .gallery-card:nth-child(4n + 3) { margin-top: 0; } }
+@media (max-width: 620px) { .gallery-progress-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px; } .gallery-retry-button { margin-left: 0; } .gallery-nav { display: none; } .gallery-intro { padding: 16vw 6vw 12vw; } .gallery-catalog { padding: 12vw 6vw 18vw; } .gallery-controls, .gallery-search, .gallery-select { width: 100%; } .gallery-search input { flex: 1; width: auto; } .gallery-skeletons, .gallery-grid { grid-template-columns: 1fr; } .gallery-card:nth-child(4n + 2), .gallery-card:nth-child(4n + 3) { margin-top: 0; } }
