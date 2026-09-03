@@ -256,7 +256,7 @@
 - [x] Detect failed NFT images and show `Image unavailable — press Refresh`.
 - [x] Reload image and metadata together from Home and Live Gallery.
 - [x] Verify the invalid-image recovery flow with a real DOM interaction.
-- [ ] Commit, push and verify the GitHub Pages workflow.
+- [x] Commit, push and verify the GitHub Pages workflow.
 
 ## Style reminder — Gallery
 
