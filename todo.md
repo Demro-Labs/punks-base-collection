@@ -250,6 +250,14 @@
 - [x] Add retry controls and preserve per-NFT Refresh actions.
 - [x] Validate TypeScript, production build and responsive Gallery rendering.
 
+## Image retry correction
+
+- [x] Add a shared image cache-busting helper for per-token reloads.
+- [x] Detect failed NFT images and show `Image unavailable — press Refresh`.
+- [x] Reload image and metadata together from Home and Live Gallery.
+- [x] Verify the invalid-image recovery flow with a real DOM interaction.
+- [ ] Commit, push and verify the GitHub Pages workflow.
+
 ## Style reminder — Gallery
 
 La galerie reprend le design « Base Terminal » : interface anglaise, surfaces graphite/ivory, accent orange Base Signal, typographie condensée de terminal, bordures techniques et mise en page éditoriale non centrée.

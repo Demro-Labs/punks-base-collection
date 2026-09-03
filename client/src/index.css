@@ -117,8 +117,9 @@ h1 em, h2 em { color: #ff6b35; font-style: normal; }
 .card-2 { margin-top: 38px; }
 .card-3 { margin-top: 76px; }
 .punk-image-wrap { aspect-ratio: 1; position: relative; overflow: hidden; background: #17191d; }
-.punk-image-wrap img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .3s cubic-bezier(.23,1,.32,1); }
-.punk-card:hover img { transform: scale(1.035); }
+  .punk-image-wrap img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .3s cubic-bezier(.23,1,.32,1); }
+  .image-error-label { position: absolute; right: 8px; bottom: 8px; z-index: 2; max-width: calc(100% - 16px); padding: 6px 8px; background: rgba(23, 25, 29, .92); color: #ffb08e; font: 8px 'IBM Plex Mono', monospace; letter-spacing: .04em; text-transform: uppercase; pointer-events: none; }
+  .punk-card:hover img { transform: scale(1.035); }
 .scan-line { position: absolute; top: 0; left: -100%; width: 45%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,107,53,.42), transparent); transform: skewX(-18deg); transition: left .6s cubic-bezier(.23,1,.32,1); }
 .punk-card:hover .scan-line { left: 140%; }
 .card-number { position: absolute; z-index: 1; top: 12px; left: 12px; color: #eee9dc; }
@@ -418,8 +419,9 @@ footer a { display: flex; align-items: center; gap: 6px; }
 .gallery-image-button { width: 100%; padding: 0; border: 0; cursor: pointer; text-align: left; }
 .gallery-image img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .3s cubic-bezier(.23,1,.32,1); }
 .gallery-card:hover .gallery-image img { transform: scale(1.035); }
-.gallery-image span { position: absolute; left: 10px; top: 10px; color: #eee9dc; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .1em; text-shadow: 0 1px 5px #17191d; }
-.gallery-card-head { display: flex; justify-content: space-between; gap: 10px; padding: 17px 4px 6px; }
+  .gallery-image span { position: absolute; left: 10px; top: 10px; color: #eee9dc; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .1em; text-shadow: 0 1px 5px #17191d; }
+  .gallery-image .gallery-image-error { left: 10px; right: 10px; top: auto; bottom: 10px; padding: 7px 8px; background: rgba(23, 25, 29, .92); color: #ffb08e; font-size: 8px; line-height: 1.3; text-shadow: none; }
+  .gallery-card-head { display: flex; justify-content: space-between; gap: 10px; padding: 17px 4px 6px; }
 .gallery-card-head h2 { margin-top: 5px; color: #17191d; font-size: 16px; line-height: 1.1; }
 .gallery-card-head > a { color: #c95028; }
 .gallery-description { display: -webkit-box; overflow: hidden; margin: 8px 4px 12px; color: #6d6c66; font-size: 12px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
@@ -434,9 +436,10 @@ footer a { display: flex; align-items: center; gap: 6px; }
 .gallery-detail-modal { position: relative; width: min(930px, 100%); max-height: min(760px, 92vh); overflow: auto; padding: 22px; border: 1px solid #55585a; background: #202226; color: #eee9dc; box-shadow: 12px 12px 0 #ff6b35; }
 .gallery-detail-close { position: absolute; z-index: 2; top: 13px; right: 13px; color: #eee9dc; }
 .gallery-detail-grid { display: grid; grid-template-columns: minmax(280px, .9fr) 1fr; gap: 30px; }
-.gallery-detail-image { aspect-ratio: 1; background: #17191d; }
-.gallery-detail-image img { width: 100%; height: 100%; display: block; object-fit: cover; }
-.gallery-detail-copy { padding: 34px 15px 15px 0; }
+  .gallery-detail-image { position: relative; aspect-ratio: 1; background: #17191d; }
+    .gallery-detail-image img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .gallery-detail-image-error { position: absolute; right: 10px; bottom: 10px; left: 10px; margin: 0; padding: 8px; background: rgba(23, 25, 29, .92); color: #ffb08e; font: 9px 'IBM Plex Mono', monospace; line-height: 1.35; text-transform: uppercase; }
+  .gallery-detail-copy { padding: 34px 15px 15px 0; }
 .gallery-detail-copy h2 { margin-top: 12px; color: #eee9dc; font-size: clamp(32px, 4vw, 58px); line-height: .98; letter-spacing: -.05em; }
 .gallery-detail-copy > p:not(.section-kicker) { margin-top: 20px; color: #a8aaa5; font-size: 14px; line-height: 1.65; }
 .gallery-detail-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 24px 0; }

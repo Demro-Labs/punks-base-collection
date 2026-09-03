@@ -19,6 +19,12 @@ const IPFS_GATEWAYS = [
 
 const RPC_TIMEOUT_MS = 8_000;
 const METADATA_TIMEOUT_MS = 6_000;
+
+export function cacheBustImageUrl(url: string, nonce = 0) {
+  if (!url || nonce === 0) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}image_refresh=${encodeURIComponent(String(nonce))}`;
+}
+
 const CACHE_DB_NAME = "punks-base-live-cache";
 const CACHE_STORE_NAME = "nfts";
 
